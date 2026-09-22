@@ -30,8 +30,8 @@ inglés.
 1. **Seguimiento** — añades una película o serie desde el catálogo de TMDB (o desde el buscador).
 2. **Comprobación cada 30 min**, más una cola continua para lo ya emitido: un episodio que ya
    salió no espera al siguiente tick.
-3. **Búsqueda** — proveedores latino (Cinecalidad, Comet, TCL, CinecalidadWeb) y, según el perfil
-   de idioma de cada título, metabúsqueda en inglés.
+3. **Búsqueda** — varias fuentes en español latino y, según el perfil de idioma de cada título,
+   metabúsqueda en inglés.
 4. **Filtros** — calidad mínima 1080p, descarte de nombres que no son la serie que buscas, lista
    negra de releases que ya fallaron.
 5. **Preflight de duración** — compara la duración del archivo con la real de TMDB antes de
