@@ -108,25 +108,27 @@ npm install
 npm run electron:dev     # modo desarrollo, con recarga en caliente
 ```
 
-Para arrancar la aplicación ya montada, sin escribir comandos:
+**Windows → doble clic en `start.bat`.** Comprueba las dependencias y **instala las que falten**:
 
-**Windows → doble clic en `start.bat`.** El lanzador hace todo el trabajo:
+1. **Node.js** y **Python** — imprescindibles: si no están, los instala con `winget` (y si no hay
+   `winget`, te da el enlace para hacerlo a mano).
+2. **FFmpeg** — opcional: te pregunta si quieres instalarlo. Sin él la app funciona, pero se queda
+   sin post-proceso de audio.
+3. Las dependencias del proyecto (`npm install`) y la compilación, sólo si aún no están.
+4. Arranca la aplicación.
 
-1. comprueba que Node.js esté instalado (si falta, te dice de dónde bajarlo);
-2. la primera vez instala las dependencias (`npm install`);
-3. compila la aplicación si todavía no lo está (`npm run build`);
-4. avisa si faltan los motores de búsqueda y con qué comando generarlos;
-5. arranca MediaPilot.
+¿Sólo quieres saber si el equipo está listo, sin arrancar nada? `start.bat check`
 
-Deja la ventana abierta mientras usas la app: si algo falla, el mensaje se queda ahí a la vista.
-Si actualizas el código, borra la carpeta `dist` para que vuelva a compilar.
-
-**Linux y macOS → `./start.sh`.** Hace exactamente lo mismo:
+**Linux y macOS → `./start.sh`.** Hace lo mismo, usando el gestor de paquetes que tengas
+(apt, dnf, pacman, zypper o brew):
 
 ```bash
-chmod +x start.sh     # solo la primera vez
-./start.sh
+chmod +x start.sh     # sólo la primera vez
+./start.sh --check    # comprueba las dependencias
+./start.sh            # arranca la aplicación
 ```
+
+En una máquina sin escritorio (un servidor por SSH) arranca directamente el **modo servidor web**.
 
 ### Modo servidor web (Linux sin escritorio)
 
