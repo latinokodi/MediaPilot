@@ -56,3 +56,10 @@ Feature: La app no muestra errores inofensivos ni pierde ajustes
     When guardo ajustes con la clave "language_profile" y el valor "latino_only"
     Then el ajuste "language_profile" vale "latino_only"
     And restauro el ajuste "language_profile"
+  Scenario: el identificador de la fila no se reporta como ignorado
+    # ← el frontend manda el objeto de ajustes completo; 'id' se salta a
+    # propósito y no debe aparecer como aviso en los registros
+    When guardo ajustes con la clave "id" y el valor "1"
+    Then el guardado se acepta
+    And el guardado aplica 0 campos
+    And el guardado no reporta "id"

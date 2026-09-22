@@ -6,9 +6,9 @@
 <p align="center"><strong>Descargador automático de películas y series — TorBox / Real-Debrid + proveedores latino, con la biblioteca ordenada como la espera Jellyfin</strong></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versi%C3%B3n-1.0.18-darkgreen?style=flat-square" />
+  <img src="https://img.shields.io/badge/versi%C3%B3n-1.0.19-darkgreen?style=flat-square" />
   <img src="https://img.shields.io/badge/licencia-MIT-yellow?style=flat-square" />
-  <img src="https://img.shields.io/badge/escenarios-130-blue?style=flat-square" />
+  <img src="https://img.shields.io/badge/escenarios-131-blue?style=flat-square" />
   <img src="https://img.shields.io/badge/plataforma-Windows%20%7C%20Linux-lightgrey?style=flat-square" />
 </p>
 
@@ -57,7 +57,7 @@ inglés.
 - **Modo servidor web**, además de Electron: sirve la misma interfaz para una máquina sin
   escritorio (ver «Modo servidor web» abajo).
 - **Especificación ejecutable**: el comportamiento está contratado en Gherkin y verificado por
-  escenarios (`npm run spec`, 130 escenarios). Ver [`spec/`](spec/).
+  escenarios (`npm run spec`, 131 escenarios). Ver [`spec/`](spec/).
 
 ## Instalación
 

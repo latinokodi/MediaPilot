@@ -833,6 +833,13 @@ export const stepDefs: Array<{ pattern: RegExp; fn: StepFn }> = [
     },
   },
   {
+    pattern: /^el guardado no reporta "([^"]*)"$/,
+    fn: ({ world }, clave) => {
+      const ignoradas = world.resultadoAjustes?.ignored || []
+      if (ignoradas.includes(clave)) throw new Error(`«${clave}» no debería figurar como ignorada`)
+    },
+  },
+  {
     pattern: /^el ajuste "([^"]*)" vale "([^"]*)"$/,
     fn: ({ world }, clave, valor) => {
       const real = String((getSettings() as any)[clave])

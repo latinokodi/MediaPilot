@@ -427,7 +427,10 @@ export function updateSettings(settings: Partial<Settings>): SettingsWriteResult
   }
 
   for (const [key, value] of Object.entries(settings || {})) {
-    if (key === 'id' || !columnas.has(key)) {
+    // 'id' es la clave de la fila: se salta sin avisar (el frontend manda el
+    // objeto de ajustes completo y reportarlo parecía un error en los registros).
+    if (key === 'id') continue
+    if (!columnas.has(key)) {
       ignoradas.push(key)
       continue
     }
