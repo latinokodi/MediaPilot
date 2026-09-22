@@ -1,13 +1,14 @@
-# Finales de línea.
+# Finales de línea. OJO: gana la ULTIMA regla que coincida, así que lo general
+# va primero y lo concreto después.
 #
-# Los .bat se guardan YA con CRLF en el repositorio (-text = git no los
-# normaliza). Así llegan con CRLF por cualquier vía: clonando, bajando el ZIP o
-# copiando el archivo en crudo.
+# Los .bat se guardan YA con CRLF en el repositorio (-text = git no normaliza).
+# Así llegan con CRLF por cualquier vía: clonando, bajando el ZIP o copiando el
+# archivo en crudo.
 #
 # Motivo: cmd.exe busca las etiquetas internas (:py_ok, :hay…) recorriendo las
 # líneas, y con finales LF falla con
 # "The system cannot find the batch label specified".
+* text=auto
 *.bat -text
 *.cmd -text
 *.sh  text eol=lf
-* text=auto
