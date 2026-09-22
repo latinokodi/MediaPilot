@@ -91,7 +91,9 @@ Todo junto en Debian/Ubuntu:
 
 ```bash
 sudo apt update && sudo apt install -y git nodejs npm python3 python3-pip ffmpeg
-pip install --user pyinstaller cloudscraper
+
+# solo si vas a generar el instalador:
+pip install --user pyinstaller
 ```
 
 ## Instalación
