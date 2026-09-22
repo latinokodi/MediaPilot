@@ -46,13 +46,14 @@ inglés.
 - **Perfil de idioma por título**: *latino primero* (con fallback a inglés), *solo latino* o
   *inglés primero*, más un idioma por defecto para los títulos nuevos.
 - **Backfill en orden**: rellena las temporadas ya emitidas, de la más antigua a la más nueva.
-- **Metabúsqueda integrada**: 23 motores, sin Docker y sin Jackett obligatorio (si tienes un
-  Jackett local, lo detecta solo).
+- **Metabúsqueda integrada**: 23 motores, sin Docker y sin Jackett obligatorio. Si tienes un
+  Jackett local lo detecta solo, y en ese caso es él quien se encarga de Cloudflare.
 - **TorBox + Real-Debrid**: OAuth, selección de archivos en RD y estado del débrid en la interfaz.
 - **Discover**: catálogo TMDB con estrenos y búsqueda automática en proveedores latino.
 - **Subtítulos** en español e inglés, con el nombre que Jellyfin entiende (`<video>.<lang>.srt`).
-- **FlareSolverr integrado**: se descarga solo y se puede reiniciar desde la barra lateral.
-- **Interfaz en español latinoamericano e inglés**, tema oscuro, con modo web además de Electron.
+- **Interfaz en español latinoamericano e inglés** (cambio inmediato) y tema oscuro.
+- **Modo servidor web**, además de Electron: sirve la misma interfaz para una máquina sin
+  escritorio (ver «Modo servidor web» abajo).
 - **Especificación ejecutable**: el comportamiento está contratado en Gherkin y verificado por
   escenarios (`npm run spec`, 117 escenarios). Ver [`spec/`](spec/).
 
@@ -71,6 +72,15 @@ cd MediaPilot
 npm install
 npm run electron:dev     # desarrollo (Electron + Vite)
 ```
+
+### Modo servidor web (Linux sin escritorio)
+
+```bash
+npm run server     # compila y sirve la interfaz en http://127.0.0.1:9650
+```
+
+Usa la misma base de datos y los mismos motores que la versión de escritorio. El puerto se
+cambia con `TDP_PORT`.
 
 Los motores de búsqueda en Python se compilan a ejecutables con PyInstaller
 (`pip install pyinstaller cloudscraper` y luego `npm run pyinstaller`); el instalador completo se
@@ -123,7 +133,8 @@ spec/                     contrato + escenarios Gherkin ejecutables
   existentes (se pueden cambiar con la variable `TDP_DATA_DIR`).
 - Los `.exe` de los motores de búsqueda no están en el repositorio: son artefactos de compilación
   (`npm run pyinstaller`) y el workflow de CI los genera.
-- En Linux funciona además en modo web, sin Electron.
+- En Linux puede correr como servidor web sin Electron: `npm run server` (puerto `TDP_PORT`,
+  por defecto 9650).
 
 ## Créditos
 

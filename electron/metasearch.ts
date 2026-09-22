@@ -1,9 +1,9 @@
 /**
  * metasearch.ts — Multi-engine torrent search for the headless web server.
  *
- * Spawns meta-search.py, which queries Jackett (Torznab API — FlareSolverr
- * is handled by Jackett itself) plus the latino providers (Cinecalidad /
- * Comet / TCL, resolved via TMDB), aggregates and deduplicates the results.
+ * Spawns meta-search.py, which queries Jackett (Torznab API; if you run a
+ * FlareSolverr instance, Jackett is the one using it) plus the latino sources
+ * (resolved via TMDB), aggregates and deduplicates the results.
  */
 
 import { spawn, type ChildProcess } from 'child_process'
