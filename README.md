@@ -59,22 +59,39 @@ inglés.
 
 ## Instalación
 
-### Windows
+### Opción 1 · Instalador (Windows)
 
 Descarga el instalador desde [Releases](https://github.com/latinokodi/MediaPilot/releases) y
 ejecútalo. No necesita Python, Java ni Docker.
 
-### Desde el código
+### Opción 2 · Desde el código (Windows, Linux y macOS)
 
 ```bash
 git clone https://github.com/latinokodi/MediaPilot.git
 cd MediaPilot
 npm install
-npm run electron:dev     # desarrollo (Electron + Vite)
+npm run electron:dev     # modo desarrollo, con recarga en caliente
 ```
 
-En Windows puedes hacer doble clic en `start.bat`, y en Linux o macOS ejecutar `./start.sh`: comprueban
-que esté Node, instalan lo que falte, compilan si hace falta y arrancan la app.
+Para arrancar la aplicación ya montada, sin escribir comandos:
+
+**Windows → doble clic en `start.bat`.** El lanzador hace todo el trabajo:
+
+1. comprueba que Node.js esté instalado (si falta, te dice de dónde bajarlo);
+2. la primera vez instala las dependencias (`npm install`);
+3. compila la aplicación si todavía no lo está (`npm run build`);
+4. avisa si faltan los motores de búsqueda y con qué comando generarlos;
+5. arranca MediaPilot.
+
+Deja la ventana abierta mientras usas la app: si algo falla, el mensaje se queda ahí a la vista.
+Si actualizas el código, borra la carpeta `dist` para que vuelva a compilar.
+
+**Linux y macOS → `./start.sh`.** Hace exactamente lo mismo:
+
+```bash
+chmod +x start.sh     # solo la primera vez
+./start.sh
+```
 
 ### Modo servidor web (Linux sin escritorio)
 
