@@ -6,7 +6,7 @@
 <p align="center"><strong>Descargador automático de películas y series — TorBox / Real-Debrid + proveedores latino, con la biblioteca ordenada como la espera Jellyfin</strong></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versi%C3%B3n-1.0.17-darkgreen?style=flat-square" />
+  <img src="https://img.shields.io/badge/versi%C3%B3n-1.0.18-darkgreen?style=flat-square" />
   <img src="https://img.shields.io/badge/licencia-MIT-yellow?style=flat-square" />
   <img src="https://img.shields.io/badge/escenarios-130-blue?style=flat-square" />
   <img src="https://img.shields.io/badge/plataforma-Windows%20%7C%20Linux-lightgrey?style=flat-square" />
@@ -113,7 +113,8 @@ genera con `npm run dist`.
 Todo se configura en **Configuración** dentro de la app:
 
 - Carpeta de películas y carpeta de series (las dos rutas que lee Jellyfin)
-- TMDB API Key (gratis en themoviedb.org) para el catálogo
+- **TMDB API Key** (gratis en themoviedb.org → tu cuenta → Configuración → API): **obligatoria** para
+  buscar y seguir títulos; sin ella la búsqueda de Seguimiento no devuelve nada
 - TorBox (API key) y Real-Debrid (OAuth)
 - Perfil de idioma por defecto para títulos nuevos
 - Jackett (opcional: URL y API key, o detección automática de una instalación local)

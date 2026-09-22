@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { BookMarked, Plus, Play, Pause, RefreshCw, Trash2, MonitorCheck, Search, X } from 'lucide-react'
+import { BookMarked, Plus, Play, Pause, RefreshCw, Trash2, MonitorCheck, Search, X, KeyRound } from 'lucide-react'
 import { useT } from '../i18n'
 import { http } from '../hooks/http'
 
@@ -71,6 +71,9 @@ export function WatchlistView({ showToast, onActivity }: { showToast: (msg: stri
   const [q, setQ] = useState('')
   const [searching, setSearching] = useState(false)
   const [hits, setHits] = useState<TmdbHit[]>([])
+  // B22: sin clave de TMDB la búsqueda no puede dar nada; se avisa antes
+  // de que el usuario escriba y se pregunte por qué no encuentra nada.
+  const [needKey, setNeedKey] = useState(false)
   const [pendingProfile, setPendingProfile] = useState('latino_first')
   const [pendingScope, setPendingScope] = useState<'new' | 'last_episode' | 'last_season' | 'first_season' | 'all'>('new')
 
@@ -103,6 +106,7 @@ export function WatchlistView({ showToast, onActivity }: { showToast: (msg: stri
       // /api/settings devuelve el objeto plano (sin envoltorio success/data).
       const p = st?.language_profile ?? st?.data?.language_profile
       if (p === 'latino_first' || p === 'latino_only' || p === 'english_first') setPendingProfile(p)
+      setNeedKey(!(st?.tmdb_api_key ?? st?.data?.tmdb_api_key))
     } catch { /* el ajuste es cosmético: el backend aplica el suyo */ }
   }, [])
 
@@ -136,7 +140,13 @@ export function WatchlistView({ showToast, onActivity }: { showToast: (msg: stri
         setHits(list)
         if (list.length === 0) showToast(t.watchlist.noResults, 'error')
       } else {
-        showToast(res?.error || t.watchlist.noResults, 'error')
+        const motivo = String(res?.error || '')
+        if (/api key/i.test(motivo)) {
+          setNeedKey(true)
+          showToast(t.watchlist.needKey, 'error')
+        } else {
+          showToast(motivo || t.watchlist.searchFailed, 'error')
+        }
       }
     } catch (e: any) {
       showToast(e?.message || t.watchlist.noResults, 'error')
@@ -388,7 +398,7 @@ export function WatchlistView({ showToast, onActivity }: { showToast: (msg: stri
                   onKeyDown={(e) => e.key === 'Enter' && doSearch()}
                   autoFocus
                 />
-                <button className="btn btn-accent px-4" onClick={doSearch} disabled={searching || !q.trim()}>
+                <button className="btn btn-accent px-4" onClick={doSearch} disabled={searching || !q.trim() || needKey}>
                   <Search size={14} className="inline mr-1" />
                   {searching ? t.watchlist.searching : t.watchlist.searchBtn}
                 </button>
@@ -416,7 +426,14 @@ export function WatchlistView({ showToast, onActivity }: { showToast: (msg: stri
 
             {/* Results (scroll interno del modal únicamente) */}
             <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-5 py-4">
-              {hits.length === 0 && !searching && (
+              {needKey && (
+                <div className="h-full flex flex-col items-center justify-center gap-3 py-10 text-center">
+                  <KeyRound size={30} strokeWidth={1.3} className="text-accent" />
+                  <p className="text-sm font-semibold text-text-heading">{t.watchlist.needKey}</p>
+                  <p className="text-sm text-text-muted max-w-md px-6">{t.watchlist.needKeyHint}</p>
+                </div>
+              )}
+              {!needKey && hits.length === 0 && !searching && (
                 <div className="h-full flex flex-col items-center justify-center gap-2 text-text-muted py-10">
                   <BookMarked size={30} strokeWidth={1.3} />
                   <p className="text-sm text-center px-6">{t.watchlist.noResultsHint}</p>
