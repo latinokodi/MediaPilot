@@ -3,7 +3,6 @@ node_modules/
 dist/
 dist-electron/
 *.db
-.agent/
 release/
 __pycache__/
 *.pyc
@@ -31,7 +30,6 @@ logs/
 cache/
 data/
 tsconfig.tsbuildinfo
-.hermes/
 .venv/
 venv/
 __pycache__/

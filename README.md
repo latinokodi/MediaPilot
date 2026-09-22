@@ -73,6 +73,9 @@ npm install
 npm run electron:dev     # desarrollo (Electron + Vite)
 ```
 
+En Windows puedes hacer doble clic en `start.bat`, y en Linux o macOS ejecutar `./start.sh`: comprueban
+que esté Node, instalan lo que falte, compilan si hace falta y arrancan la app.
+
 ### Modo servidor web (Linux sin escritorio)
 
 ```bash
