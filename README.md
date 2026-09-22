@@ -73,9 +73,11 @@ la app toma del sistema:
 
 - **Git** — <https://git-scm.com/downloads> (con interfaz gráfica: <https://desktop.github.com>)
 - **Node.js LTS**, incluye npm — <https://nodejs.org>
-- **Python 3.11 o superior** — solo para compilar los motores de búsqueda: <https://www.python.org/downloads>
-- **PyInstaller y cloudscraper** — <https://pyinstaller.org/en/stable/> ·
-  `pip install pyinstaller cloudscraper`
+- **Python 3.11 o superior** — imprescindible para ejecutar desde el código: el catálogo y la
+  búsqueda corren como scripts de Python (<https://www.python.org/downloads>). En la app instalada
+  viene empaquetado, no hace falta
+- **PyInstaller** — sólo si vas a generar el instalador, que congela los scripts: <https://pyinstaller.org/en/stable/> ·
+  `pip install pyinstaller`. (cloudscraper lo instala la propia app cuando lo necesita)
 - **Clave de TMDB** (gratuita y obligatoria para buscar y seguir títulos) —
   <https://www.themoviedb.org/settings/api>
 
