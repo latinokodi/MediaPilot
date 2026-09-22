@@ -1,0 +1,9 @@
+# Finales de línea correctos según la plataforma.
+#
+# Los .bat DEBEN ir con CRLF: cmd.exe busca las etiquetas internas (:py_ok, :hay…)
+# recorriendo las líneas, y con finales LF a veces no las encuentra y falla con
+# "The system cannot find the batch label specified".
+* text=auto
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.sh  text eol=lf

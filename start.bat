@@ -34,22 +34,13 @@ for /f "delims=" %%v in ('node --version 2^>nul') do echo         instalado: %%v
 
 :: ── 2/4 · Python ─────────────────────────────────────────────────────────────
 echo   [2/4] Python
-set "PY="
-call :hay py
-if not errorlevel 1 set "PY=py -3"
-if defined PY goto py_ok
-call :hay python
-if not errorlevel 1 set "PY=python"
-if defined PY goto py_ok
+call :python_ok
+if not errorlevel 1 goto py_ok
 echo         no esta instalado.
 call :instalar "Python.Python.3.12" "Python 3.12"
 call :refrescar_path
-call :hay py
-if not errorlevel 1 set "PY=py -3"
-if defined PY goto py_ok
-call :hay python
-if not errorlevel 1 set "PY=python"
-if defined PY goto py_ok
+call :python_ok
+if not errorlevel 1 goto py_ok
 echo.
 echo   [!] Sin Python no funciona la busqueda de titulos.
 echo       Descargalo de https://www.python.org/downloads y vuelve a ejecutar este archivo.
@@ -66,10 +57,7 @@ if not errorlevel 1 goto ffmpeg_fin
 echo         no esta instalado. Se usa para ordenar las pistas de audio y para
 echo         comprobar la duracion antes de descargar.
 choice /c SN /n /m "         Instalarlo ahora con winget? [S/N] "
-if errorlevel 2 (
-  echo         Se omite: la app funciona, pero sin post-proceso de audio.
-  goto ffmpeg_fin
-)
+if errorlevel 2 goto ffmpeg_fin
 call :instalar "Gyan.FFmpeg" "FFmpeg"
 call :refrescar_path
 call :hay ffmpeg
@@ -134,7 +122,20 @@ exit /b 0
 where %~1 >nul 2>&1
 exit /b %errorlevel%
 
+:python_ok
+rem Deja en PY el comando que funciona. Comprueba de verdad que responda: en
+rem Windows 'python' puede ser el alias de la Store y no haber Python detras.
+set "PY="
+py -3 --version >nul 2>&1
+if not errorlevel 1 set "PY=py -3"
+if defined PY exit /b 0
+python --version >nul 2>&1
+if not errorlevel 1 set "PY=python"
+if defined PY exit /b 0
+exit /b 1
+
 :instalar
+rem %1 = id de winget · %2 = nombre para el mensaje
 where winget >nul 2>&1
 if errorlevel 1 (
   echo         [!] winget no esta disponible en este equipo: habria que instalarlo a mano.
