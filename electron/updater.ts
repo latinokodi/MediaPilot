@@ -9,6 +9,33 @@ const MAX_FAILURES = 3
 const COOLDOWN_MS = 6 * 3600 * 1000 // 6 hours
 const PROMPT_COOLDOWN_MS = 24 * 3600 * 1000 // 24 hours (user dismissed)
 
+/**
+ * ¿El error significa «no hay nada nuevo» y no un fallo?
+ *
+ * El servidor de releases puede no tener nada publicado (por ejemplo mientras
+ * se regeneran los artefactos) o la consulta puede no llegar por red. Ninguna
+ * de las dos cosas es un problema para quien usa la app: no hay actualización
+ * que ofrecer y la aplicación funciona igual. Antes se mostraba un error en la
+ * interfaz, que asustaba sin motivo.
+ */
+export function isBenignUpdateError(msg: unknown): boolean {
+  const m = String(msg ?? '').toLowerCase()
+  if (!m) return false
+  const noHayNada = [
+    'no published versions', 'no releases', 'no such release', 'release not found',
+    'cannot parse', 'unable to find latest version', 'no files found',
+  ]
+  const noSePudoConsultar = [
+    'enotfound', 'etimedout', 'econnreset', 'econnrefused', 'eai_again', 'net::',
+    'socket hang up', 'timeout', 'network', 'getaddrinfo', 'certificate', 'tls',
+  ]
+  if ([...noHayNada, ...noSePudoConsultar].some((s) => m.includes(s))) return true
+  // Un 4xx/5xx del servidor de releases (no existe, límite de peticiones, caída
+  // puntual) tampoco es un problema para quien usa la app. Cubre tanto
+  // "http error 404" como "HttpError: 404 Not Found".
+  return /(httperror|http error|status code|respuesta)\D{0,3}[45]\d\d/.test(m)
+}
+
 let mainWindow: BrowserWindow | null = null
 let updateInfo: UpdateInfo | null = null
 
@@ -50,6 +77,14 @@ export function initAutoUpdater(win: BrowserWindow): void {
   })
 
   autoUpdater.on('error', (err) => {
+    if (isBenignUpdateError(err?.message)) {
+      // No hay nada que ofrecer o no se pudo consultar: se informa como "sin
+      // actualización" y no se le enseña un error a quien usa la app.
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update-not-available')
+      }
+      return
+    }
     consecutiveFailures++
     if (consecutiveFailures >= MAX_FAILURES && !cooldownUntil) {
       cooldownUntil = Date.now() + COOLDOWN_MS
@@ -96,9 +131,12 @@ export function checkForUpdatesManual(): void {
   cooldownUntil = 0
 
   autoUpdater.checkForUpdates().catch((err) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('update-error', err.message || 'Check failed')
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    if (isBenignUpdateError(err?.message)) {
+      mainWindow.webContents.send('update-not-available')
+      return
     }
+    mainWindow.webContents.send('update-error', err.message || 'Check failed')
   })
 }
 

@@ -37,6 +37,7 @@ import {
   removeWatchlistItem,
 } from '../../electron/watchlist'
 import { getSettings, updateSettings } from '../../electron/db'
+import { isBenignUpdateError } from '../../electron/updater'
 
 export interface World {
   titles?: string[]
@@ -87,6 +88,10 @@ export interface World {
   posterItem?: { poster?: string | null; backdrop?: string | null }
   posterDetail?: any
   posterPatch?: { poster?: string; backdrop?: string }
+  updateError?: string
+  esperadoLeve?: boolean
+  ajusteGuardado?: { clave: string; valor: any }
+  resultadoAjustes?: { ok: boolean; applied: number; ignored: string[] }
 }
 
 export interface StepRun {
@@ -762,6 +767,111 @@ export const stepDefs: Array<{ pattern: RegExp; fn: StepFn }> = [
       const id = world.testItemId
       if (id) removeWatchlistItem(id)
       if (id && listWatchlist().some((i) => i.id === id)) throw new Error('el título de prueba sigue en el listado')
+    },
+  },
+
+  // ── B21 · actualizaciones y guardado de ajustes ─────────────────────────
+  {
+    pattern: /^el error de actualización "(.*)" es leve$/,
+    fn: ({ world }, mensaje) => {
+      world.updateError = mensaje
+      world.esperadoLeve = true
+    },
+  },
+  {
+    pattern: /^el error de actualización "(.*)" no es leve$/,
+    fn: ({ world }, mensaje) => {
+      world.updateError = mensaje
+      world.esperadoLeve = false
+    },
+  },
+  {
+    pattern: /^la app lo trata como sin actualización y no lo enseña como error$/,
+    fn: ({ world }) => {
+      const real = isBenignUpdateError(world.updateError)
+      if (real !== world.esperadoLeve) {
+        throw new Error(`«${world.updateError}» → leve=${real} · esperado ${world.esperadoLeve}`)
+      }
+    },
+  },
+  {
+    pattern: /^recuerdo el ajuste "([^"]*)"$/,
+    fn: ({ world }, clave) => {
+      world.ajusteGuardado = { clave, valor: (getSettings() as any)[clave] }
+    },
+  },
+  {
+    pattern: /^guardo ajustes con la clave "([^"]*)" y el valor "([^"]*)"$/,
+    fn: ({ world }, clave, valor) => {
+      world.resultadoAjustes = updateSettings({ [clave]: valor } as any)
+    },
+  },
+  {
+    pattern: /^guardo ajustes con la clave "([^"]*)" y un objeto$/,
+    fn: ({ world }, clave) => {
+      world.resultadoAjustes = updateSettings({ [clave]: { a: 1 } } as any)
+    },
+  },
+  {
+    pattern: /^el guardado se acepta$/,
+    fn: ({ world }) => {
+      if (!world.resultadoAjustes?.ok) throw new Error('el guardado devolvió ok=false')
+    },
+  },
+  {
+    pattern: /^el guardado aplica (\d+) campos?$/,
+    fn: ({ world }, n) => {
+      const aplicados = world.resultadoAjustes?.applied
+      if (aplicados !== Number(n)) throw new Error(`aplicó ${aplicados} campos · esperado ${n}`)
+    },
+  },
+  {
+    pattern: /^el guardado ignora "([^"]*)"$/,
+    fn: ({ world }, clave) => {
+      const ignoradas = world.resultadoAjustes?.ignored || []
+      if (!ignoradas.includes(clave)) throw new Error(`no figura en ignoradas: ${ignoradas.join(', ') || '(ninguna)'}`)
+    },
+  },
+  {
+    pattern: /^el ajuste "([^"]*)" vale "([^"]*)"$/,
+    fn: ({ world }, clave, valor) => {
+      const real = String((getSettings() as any)[clave])
+      if (real !== valor) throw new Error(`«${clave}» = ${real} · esperado ${valor}`)
+    },
+  },
+  {
+    pattern: /^el ajuste "([^"]*)" sigue como estaba$/,
+    fn: ({ world }, clave) => {
+      const guardado = world.ajusteGuardado?.valor
+      const real = (getSettings() as any)[clave]
+      if (String(real) !== String(guardado)) {
+        throw new Error(`«${clave}» cambió de ${guardado} a ${real}`)
+      }
+    },
+  },
+  {
+    pattern: /^el ajuste "([^"]*)" se guardó como JSON$/,
+    fn: ({ world }, clave) => {
+      const real = String((getSettings() as any)[clave])
+      let parsed: any
+      try {
+        parsed = JSON.parse(real)
+      } catch {
+        throw new Error(`«${clave}» no quedó como JSON: ${real}`)
+      }
+      if (parsed?.a !== 1) throw new Error(`JSON inesperado en «${clave}»: ${real}`)
+    },
+  },
+  {
+    pattern: /^restauro el ajuste "([^"]*)"$/,
+    fn: ({ world }, clave) => {
+      const guardado = world.ajusteGuardado
+      if (!guardado || guardado.clave !== clave) throw new Error(`no había guardado previo de «${clave}»`)
+      updateSettings({ [clave]: guardado.valor } as any)
+      const real = (getSettings() as any)[clave]
+      if (String(real) !== String(guardado.valor)) {
+        throw new Error(`no se pudo restaurar «${clave}» (quedó ${real})`)
+      }
     },
   },
 ]

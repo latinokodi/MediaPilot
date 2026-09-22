@@ -1,6 +1,6 @@
 {
   "name": "mediapilot",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "MediaPilot — descargador automático de películas y series: TorBox/Real-Debrid, proveedores latino, biblioteca lista para Jellyfin",
   "license": "MIT",
   "author": "latinokodi",

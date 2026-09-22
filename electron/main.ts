@@ -128,8 +128,19 @@ app.on('window-all-closed', () => {
 ipcMain.handle('get-settings', () => getSettings())
 
 ipcMain.handle('set-settings', (_e, settings: Partial<Settings>) => {
-  updateSettings(settings)
-  return { success: true }
+  // Nunca se propaga: si algo falla, se responde y la app sigue viva (antes
+  // saltaba "Error occurred in handler for 'set-settings'" y los ajustes se
+  // perdían en silencio).
+  try {
+    const r = updateSettings(settings)
+    if (r.ignored.length) console.warn('[settings] claves ignoradas:', r.ignored.join(', '))
+    return r.ok
+      ? { success: true, applied: r.applied, ignored: r.ignored }
+      : { success: false, error: 'No se pudieron guardar los ajustes' }
+  } catch (e) {
+    console.error('[settings] error inesperado:', (e as Error).message)
+    return { success: false, error: (e as Error).message }
+  }
 })
 
 ipcMain.handle('search-metasearch', async (e, query: string) => {

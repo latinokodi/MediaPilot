@@ -329,6 +329,39 @@ Reglas:
 Criterio de éxito: `GET /api/watchlist` no devuelve ningún póster relativo ni
 vacío en los títulos que existen en TMDB, y cada URL responde 200.
 
+### B21 · Actualizaciones y ajustes que no asustan ni pierden datos
+
+Dos fallos reales reportados por un usuario de la versión publicada:
+
+- Al arrancar, la app mostraba **«No published versions on GitHub»** como error.
+  La causa no estaba en el usuario: el workflow **borraba y recreaba el release**
+  en cada push a `main`, así que durante unos segundos el repositorio no tenía
+  ninguna versión publicada. Un error así significa «no hay nada nuevo», no un
+  problema, y no debe aparecer en pantalla.
+- **«Error occurred in handler for 'set-settings'»**: el guardado construía el
+  `UPDATE` con las claves del objeto recibido sin comprobar que fuesen columnas
+  reales de la tabla ni que el valor fuese enlazable por SQLite. Una clave nueva
+  o un valor no escalar hacía saltar la sentencia entera: **no se guardaba nada y
+  el usuario no se enteraba**.
+
+Reglas:
+- Regla 1: un error de actualización que sólo indique «no hay nada publicado» o
+  «no se pudo consultar» (red o código 4xx/5xx) se informa como *sin
+  actualización*; nunca como error.
+- Regla 2: los fallos de verdad (checksum, permisos, fichero que falta) sí se
+  muestran y siguen contando para el interruptor de seguridad.
+- Regla 3: al guardar ajustes sólo se escriben columnas que existen; los valores
+  no escalares se guardan como JSON y lo que no se pueda aplicar se informa, sin
+  romper la operación completa.
+- Regla 4: la ruta HTTP de ajustes responde 500 explicando el fallo en lugar de
+  caer; el IPC siempre contesta.
+- Regla 5: el workflow de publicación **nunca borra** un release: si existe,
+  reemplaza sus archivos. Un hueco sin releases publicados rompe las
+  actualizaciones de todos los usuarios.
+
+Criterio de éxito: `spec/features/update-check.feature` (13 escenarios) y ningún
+release con ventana de ausencia.
+
 ## 9. Success criteria (verificables)
 
 1. `npm run spec` en verde (93 escenarios), con las conductas B1–B17 cubiertas.

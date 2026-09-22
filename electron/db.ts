@@ -372,19 +372,82 @@ export function getSettings(): Settings {
   };
 }
 
-export function updateSettings(settings: Partial<Settings>): void {
-  const fields: string[] = [];
-  const values: any[] = [];
-  
-  for (const [key, value] of Object.entries(settings)) {
-    if (key === 'id') continue;
-    fields.push(`${key} = ?`);
-    values.push(typeof value === 'boolean' ? (value ? 1 : 0) : value);
+let settingsColumns: Set<string> | null = null
+
+/** Nombres de las columnas reales de la tabla settings (con caché). */
+function settingsColumnSet(): Set<string> {
+  if (!settingsColumns) {
+    const filas = db.prepare('PRAGMA table_info(settings)').all() as { name: string }[]
+    settingsColumns = new Set(filas.map((f) => String(f.name)))
   }
-  
-  if (fields.length > 0) {
-    const query = `UPDATE settings SET ${fields.join(', ')} WHERE id = 1`;
-    db.prepare(query).run(...values);
+  return settingsColumns
+}
+
+/** ¿Qué tipos acepta SQLite? Lo demás se guarda como JSON o se descarta. */
+function valorEnlazable(value: unknown): any {
+  if (value === undefined || typeof value === 'function') return undefined
+  if (value === null) return null
+  if (typeof value === 'boolean') return value ? 1 : 0
+  if (typeof value === 'number' || typeof value === 'bigint' || typeof value === 'string') return value
+  if (Buffer.isBuffer(value)) return value
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return undefined
+  }
+}
+
+export interface SettingsWriteResult {
+  ok: boolean
+  applied: number
+  /** Claves que no existen como columna o no se pudieron convertir. */
+  ignored: string[]
+}
+
+/**
+ * Guarda ajustes sin romperse por culpa de lo que llegue.
+ *
+ * Antes se construía el UPDATE con las claves del objeto recibido tal cual, así
+ * que una clave que no fuese columna (o un valor que SQLite no sabe enlazar)
+ * hacía saltar la sentencia y **no se guardaba nada**, sin avisar. Ahora sólo
+ * se escriben columnas que existen, los tipos se convierten y un fallo se
+ * devuelve en lugar de propagarse.
+ */
+export function updateSettings(settings: Partial<Settings>): SettingsWriteResult {
+  const ignoradas: string[] = []
+  const fields: string[] = []
+  const values: any[] = []
+
+  let columnas: Set<string>
+  try {
+    columnas = settingsColumnSet()
+  } catch (e) {
+    console.error('[settings] no se pudo leer el esquema:', (e as Error).message)
+    return { ok: false, applied: 0, ignored: Object.keys(settings || {}) }
+  }
+
+  for (const [key, value] of Object.entries(settings || {})) {
+    if (key === 'id' || !columnas.has(key)) {
+      ignoradas.push(key)
+      continue
+    }
+    const v = valorEnlazable(value)
+    if (v === undefined) {
+      ignoradas.push(key)
+      continue
+    }
+    fields.push(`${key} = ?`)
+    values.push(v)
+  }
+
+  if (!fields.length) return { ok: true, applied: 0, ignored: ignoradas }
+
+  try {
+    db.prepare(`UPDATE settings SET ${fields.join(', ')} WHERE id = 1`).run(...values)
+    return { ok: true, applied: fields.length, ignored: ignoradas }
+  } catch (e) {
+    console.error('[settings] fallo al guardar:', (e as Error).message)
+    return { ok: false, applied: 0, ignored: ignoradas }
   }
 }
 
