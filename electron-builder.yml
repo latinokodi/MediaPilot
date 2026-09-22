@@ -41,8 +41,8 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: TorDownloader PRO
-  artifactName: TorDownloader-PRO-Setup-${version}.${ext}
+  shortcutName: MediaPilot
+  artifactName: MediaPilot-Setup-${version}.${ext}
 
 asar: true
 asarUnpack:

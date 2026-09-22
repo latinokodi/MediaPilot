@@ -49,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MediaPilot-Setup
-          path: release/MediaPilot-Setup-*.exe
+          path: release/*.exe
 
       - name: Create Release (tag)
         if: startsWith(github.ref, 'refs/tags/v')
@@ -57,7 +57,7 @@ jobs:
         with:
           draft: false
           files: |
-            release/MediaPilot-Setup-*.exe
+            release/*.exe
             release/latest.yml
             release/*.blockmap
 
@@ -68,7 +68,7 @@ jobs:
         run: |
           $version = (Get-Content package.json | ConvertFrom-Json).version
           $tag = "v$version"
-          $exe = Get-ChildItem release/MediaPilot-Setup-*.exe | Select-Object -First 1
+          $exe = Get-ChildItem release/*.exe | Select-Object -First 1
           # Get tag annotation if it exists, otherwise use commit-based fallback
           $tagMsg = git tag -l --format='%(contents)' $tag 2>$null
           if (-not $tagMsg) { $tagMsg = "Release $version — commit ${{ github.sha }}" }

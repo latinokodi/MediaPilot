@@ -118,8 +118,9 @@ spec/                     contrato + escenarios Gherkin ejecutables
 
 ## Notas
 
-- El directorio de datos es `~/.tordownloader-pro/`, nombre heredado del proyecto original que se
-  mantiene por compatibilidad con las instalaciones existentes.
+- El directorio de datos es `~/.tordownloader-pro/` y la base se llama `tordownloader.db`: nombres
+  heredados del proyecto original que se mantienen por compatibilidad con las instalaciones
+  existentes (se pueden cambiar con la variable `TDP_DATA_DIR`).
 - Los `.exe` de los motores de búsqueda no están en el repositorio: son artefactos de compilación
   (`npm run pyinstaller`) y el workflow de CI los genera.
 - En Linux funciona además en modo web, sin Electron.
