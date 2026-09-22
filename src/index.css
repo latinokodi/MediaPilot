@@ -1,0 +1,344 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design Tokens — MediaPilot Light (readable, friendly) ─── */
+:root {
+  --bg-deep: #f3f5f9;
+  --bg-panel: #ffffff;
+  --bg-card: #ffffff;
+  --bg-input: #f8fafc;
+  --border-color: #e2e6ee;
+  --border-focus: #4f46e5;
+  --border-success: #10b981;
+  --text-heading: #111827;
+  --text-main: #26303e;
+  --text-muted: #5b6b81;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #eef2ff;
+  --success: #059669;
+  --danger: #dc2626;
+  --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-mono: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-pop: 0 4px 6px -1px rgba(16, 24, 40, 0.08), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+}
+
+/* ─── Base ─── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  height: 100dvh; /* dvh: 100vh queda por debajo del chrome del navegador móvil */
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-deep);
+  color: var(--text-main);
+  font-family: var(--font-display);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: break-word;
+}
+
+/* Nada de medios desbordando su contenedor */
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ─── Scrollbar (soft) ─── */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+  border: 2px solid var(--bg-deep);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: rgba(79, 70, 229, 0.18);
+  color: var(--text-heading);
+}
+
+@layer components {
+  /* ─── Panel / Card ─── */
+  .glass-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* ─── Buttons ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-main);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease,
+      box-shadow 160ms ease, transform 120ms ease;
+  }
+  .btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-pop);
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn:focus-visible {
+    outline: 2px solid rgba(79, 70, 229, 0.4);
+    outline-offset: 2px;
+  }
+
+  .btn-accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+  .btn-accent:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: #ffffff;
+  }
+
+  .btn-danger {
+    border-color: transparent;
+    color: var(--text-muted);
+    background: transparent;
+  }
+  .btn-danger:hover {
+    color: var(--danger);
+    border-color: rgba(220, 38, 38, 0.45);
+    background: rgba(220, 38, 38, 0.04);
+  }
+
+  .btn-play {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 120ms ease;
+  }
+  .btn-play:hover:not(:disabled) {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-1px);
+  }
+  .btn-play:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .queue-item {
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .queue-item:hover {
+    border-color: var(--border-focus);
+    box-shadow: var(--shadow-pop);
+  }
+
+  /* ─── Acciones sobre póster (borrar / añadir / pausar) ───
+     En escritorio aparecen al pasar el ratón. En pantallas táctiles (pointer: coarse)
+     no existe hover, así que deben verse SIEMPRE o la acción es inalcanzable. */
+  .actions-overlay {
+    opacity: 1;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .actions-overlay {
+      opacity: 0;
+      transition: opacity 160ms ease;
+    }
+    .group:hover .actions-overlay,
+    .group:focus-within .actions-overlay {
+      opacity: 1;
+    }
+  }
+
+  /* ─── Inputs ─── */
+  .input-field {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.9rem;
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    color: var(--text-main);
+    outline: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  }
+  .input-field::placeholder {
+    color: #94a3b8;
+  }
+  .input-field:focus {
+    border-color: var(--accent);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+  }
+
+  .select-field {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.9rem;
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    color: var(--text-main);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    padding-right: 2rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .select-field:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+  }
+
+  /* ─── Status Badge ─── */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.2rem 0.6rem;
+    font-family: var(--font-display);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    border: 1px solid;
+    border-radius: 999px;
+    transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease;
+  }
+  .status-pending { color: var(--accent); border-color: rgba(79, 70, 229, 0.4); background: var(--accent-soft); }
+  .status-scraping { color: var(--accent-hover); border-color: rgba(67, 56, 202, 0.4); background: #eef2ff; }
+  .status-done { color: var(--success); border-color: rgba(5, 150, 105, 0.4); background: #ecfdf5; }
+  .status-failed { color: var(--danger); border-color: rgba(220, 38, 38, 0.4); background: #fef2f2; }
+
+  /* ─── Modal ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(3px);
+  }
+
+  .modal-panel {
+    width: 100%;
+    max-width: 30rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.25);
+  }
+
+  .section-label {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    display: block;
+  }
+
+  /* ─── Animations (kept minimal and subtle) ─── */
+  .animate-fade-in {
+    animation: fade-in 0.25s ease-out;
+  }
+  .animate-slide-up {
+    animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.18); }
+  50% { box-shadow: 0 0 0 6px rgba(79, 70, 229, 0.08); }
+}
+
+/* ─── Móvil (≤640px): objetivos táctiles y sin zoom de iOS ─── */
+/* OJO: la app fija html{font-size:15px} → 1rem = 15px, así que los tamaños
+   táctiles van en px reales (2.5rem serían 37.5px, por debajo de 44). */
+@media (max-width: 639px) {
+  .btn {
+    min-height: 44px;
+    /* Botones sólo-icono (34px de ancho por el padding) también alcanzan 44 */
+    min-width: 44px;
+  }
+  /* iOS Safari hace zoom al enfocar un input con font-size < 16px */
+  .input-field,
+  .select-field {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .modal-panel {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+}

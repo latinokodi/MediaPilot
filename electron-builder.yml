@@ -1,0 +1,53 @@
+appId: com.mediapilot.app
+productName: MediaPilot
+copyright: Copyright © 2025-2026 latinokodi
+
+publish:
+  provider: github
+  owner: latinokodi
+  repo: MediaPilot
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+
+extraResources:
+  - from: electron/qbit-plugins
+    to: qbit-plugins
+    filter:
+      - "qbit-runner.exe"
+      - "engines/**"
+      - "novaprinter.py"
+      - "helpers.py"
+  - from: electron/tmdb-provider.exe
+    to: tmdb-provider.exe
+  - from: electron/latino-providers.exe
+    to: latino-providers.exe
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: TorDownloader PRO
+  artifactName: TorDownloader-PRO-Setup-${version}.${ext}
+
+asar: true
+asarUnpack:
+  - "node_modules/better-sqlite3/**"
+  - "node_modules/bindings/**"
+  - "node_modules/file-uri-to-path/**"
+
+npmRebuild: true
