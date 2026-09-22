@@ -1,9 +1,13 @@
-# Finales de línea correctos según la plataforma.
+# Finales de línea.
 #
-# Los .bat DEBEN ir con CRLF: cmd.exe busca las etiquetas internas (:py_ok, :hay…)
-# recorriendo las líneas, y con finales LF a veces no las encuentra y falla con
+# Los .bat se guardan YA con CRLF en el repositorio (-text = git no los
+# normaliza). Así llegan con CRLF por cualquier vía: clonando, bajando el ZIP o
+# copiando el archivo en crudo.
+#
+# Motivo: cmd.exe busca las etiquetas internas (:py_ok, :hay…) recorriendo las
+# líneas, y con finales LF falla con
 # "The system cannot find the batch label specified".
-* text=auto
-*.bat text eol=crlf
-*.cmd text eol=crlf
+*.bat -text
+*.cmd -text
 *.sh  text eol=lf
+* text=auto
