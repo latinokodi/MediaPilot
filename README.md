@@ -59,6 +59,39 @@ inglés.
 - **Especificación ejecutable**: el comportamiento está contratado en Gherkin y verificado por
   escenarios (`npm run spec`, 131 escenarios). Ver [`spec/`](spec/).
 
+## Requisitos
+
+**Para usar la app instalada (Windows): nada.** El instalador trae todo lo necesario.
+
+**Para el post-proceso completo** (ordenar las pistas de audio) **y el preflight de duración**, que
+la app toma del sistema:
+
+- **FFmpeg** — <https://ffmpeg.org/download.html> · Windows: `winget install Gyan.FFmpeg` ·
+  Debian/Ubuntu: `sudo apt install ffmpeg` · macOS: `brew install ffmpeg`
+
+**Para ejecutar desde el código o compilar el instalador**, además:
+
+- **Git** — <https://git-scm.com/downloads> (con interfaz gráfica: <https://desktop.github.com>)
+- **Node.js LTS**, incluye npm — <https://nodejs.org>
+- **Python 3.11 o superior** — solo para compilar los motores de búsqueda: <https://www.python.org/downloads>
+- **PyInstaller y cloudscraper** — <https://pyinstaller.org/en/stable/> ·
+  `pip install pyinstaller cloudscraper`
+- **Clave de TMDB** (gratuita y obligatoria para buscar y seguir títulos) —
+  <https://www.themoviedb.org/settings/api>
+
+Todo junto en Windows (PowerShell):
+
+```powershell
+winget install Git.Git OpenJS.NodeJS.LTS Python.Python.3.12 Gyan.FFmpeg
+```
+
+Todo junto en Debian/Ubuntu:
+
+```bash
+sudo apt update && sudo apt install -y git nodejs npm python3 python3-pip ffmpeg
+pip install --user pyinstaller cloudscraper
+```
+
 ## Instalación
 
 ### Opción 1 · Instalador (Windows)

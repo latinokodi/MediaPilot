@@ -78,8 +78,11 @@ jobs:
           # reemplazan sus archivos; si no existe, se crea.
           gh release view $tag --json tagName 2>$null | Out-Null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload $tag $exe.FullName release/latest.yml $blockmap.FullName --clobber
-            gh release edit $tag --title "$version" --notes "Actualizacion de la version $version (commit ${{ github.sha }})"
+            # La version ya esta publicada: no se toca. Los artefactos de una
+            # version publicada no se reemplazan, asi que un cambio que no sube
+            # la version (documentacion, por ejemplo) no altera lo que ya se
+            # estan descargando los usuarios.
+            Write-Host "El release $tag ya existe: se deja como esta."
           } else {
             gh release create $tag $exe.FullName release/latest.yml $blockmap.FullName `
               --title "$version" `
