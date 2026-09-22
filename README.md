@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="build/icon.ico" width="96" alt="MediaPilot" />
+  <img src="build/icon.png" width="110" alt="MediaPilot" />
 </p>
 
 <h1 align="center">MediaPilot</h1>
@@ -48,10 +48,12 @@ inglés.
 - **Backfill en orden**: rellena las temporadas ya emitidas, de la más antigua a la más nueva.
 - **Metabúsqueda integrada**: 23 motores, sin Docker y sin Jackett obligatorio. Si tienes un
   Jackett local lo detecta solo, y en ese caso es él quien se encarga de Cloudflare.
-- **TorBox + Real-Debrid**: OAuth, selección de archivos en RD y estado del débrid en la interfaz.
-- **Discover**: catálogo TMDB con estrenos y búsqueda automática en proveedores latino.
+- **TorBox + Real-Debrid**: vinculación desde la interfaz (Real-Debrid por OAuth), selección de
+  archivos en RD y estado del débrid en la pantalla de Panel.
+- **Discover**: catálogo de TMDB para explorar películas y series, con búsqueda automática en
+  fuentes latino.
 - **Subtítulos** en español e inglés, con el nombre que Jellyfin entiende (`<video>.<lang>.srt`).
-- **Interfaz en español latinoamericano e inglés** (cambio inmediato) y tema oscuro.
+- **Interfaz en español latinoamericano e inglés**, con cambio inmediato desde la barra lateral.
 - **Modo servidor web**, además de Electron: sirve la misma interfaz para una máquina sin
   escritorio (ver «Modo servidor web» abajo).
 - **Especificación ejecutable**: el comportamiento está contratado en Gherkin y verificado por
@@ -112,7 +114,7 @@ Todo se configura en **Configuración** dentro de la app:
 
 - Carpeta de películas y carpeta de series (las dos rutas que lee Jellyfin)
 - TMDB API Key (gratis en themoviedb.org) para el catálogo
-- TorBox / Real-Debrid (OAuth)
+- TorBox (API key) y Real-Debrid (OAuth)
 - Perfil de idioma por defecto para títulos nuevos
 - Jackett (opcional: URL y API key, o detección automática de una instalación local)
 - Jellyfin (URL y API key) para refrescar la biblioteca al terminar una descarga
