@@ -101,9 +101,9 @@ if not exist "dist\index.html" (
 echo         arrancando...
 echo.
 taskkill /f /im electron.exe >nul 2>&1
-rem Modo desarrollo: es el que usa Python directamente para los motores de
-rem busqueda, sin necesidad de compilar los ejecutables con PyInstaller.
-call npm run electron:dev
+rem Con lo ya compilado; la app usa Python para los motores de busqueda, no
+rem hacen falta los ejecutables de PyInstaller.
+call npm start
 echo.
 echo   MediaPilot se ha cerrado.
 pause

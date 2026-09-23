@@ -9,6 +9,7 @@
 import { spawn, type ChildProcess } from 'child_process'
 import path from 'path'
 import { app } from 'electron'
+import { existeRuta, rutaDeRecurso } from './resource-paths'
 
 // ── Types ──────────────────────────────────────────────
 
@@ -45,10 +46,12 @@ function getRunnerPath(): string {
     // the configured python.
     return path.join(__dirname, '..', 'electron', 'meta-search.py')
   }
-  if (process.env.VITE_DEV_SERVER_URL) {
-    return path.join(__dirname, '..', 'electron', 'meta-search.py')
-  }
-  return path.join(process.resourcesPath || app.getAppPath(), 'qbit-plugins', 'qbit-runner.exe')
+  // Empaquetada: el ejecutable con los motores. Desde el código no existe, así
+  // que se usa meta-search.py, que importa los motores directamente (no hace
+  // falta compilarlos con PyInstaller para ejecutar desde el código).
+  const exe = rutaDeRecurso('qbit-plugins', 'qbit-runner.exe')
+  if (existeRuta(exe)) return exe
+  return rutaDeRecurso('meta-search.py')
 }
 
 function getRunnerCommand(): { cmd: string; args: string[] } {

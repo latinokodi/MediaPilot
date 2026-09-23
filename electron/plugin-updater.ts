@@ -10,6 +10,7 @@ import https from 'https'
 import path from 'path'
 import fs from 'fs'
 import { app } from 'electron'
+import { rutaDeRecurso } from './resource-paths'
 
 // ── Config ─────────────────────────────────────────────
 
@@ -35,10 +36,8 @@ export interface UpdateResult {
 // ── Paths ──────────────────────────────────────────────
 
 function getBundledEnginesDir(): string {
-  if (process.env.VITE_DEV_SERVER_URL) {
-    return path.join(__dirname, '..', 'electron', 'qbit-plugins', 'engines')
-  }
-  return path.join(process.resourcesPath || app.getAppPath(), 'qbit-plugins', 'engines')
+  // Empaquetada en los recursos, desde el código en el proyecto.
+  return rutaDeRecurso('qbit-plugins', 'engines')
 }
 
 function getUserPluginsDir(): string {

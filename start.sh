@@ -151,4 +151,4 @@ fi
 
 echo "        arrancando..."
 echo
-exec npm run electron:dev
+exec npm start

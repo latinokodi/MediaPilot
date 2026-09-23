@@ -9,6 +9,7 @@ import { TorboxAPI } from './torbox'
 import { RealDebridAPI, RD_OPENSOURCE_CLIENT_ID } from './realdebrid'
 import { startWorker, cancelLocalDownload } from './worker'
 import { initAutoUpdater, checkForUpdates, checkForUpdatesManual, downloadUpdate, installUpdate, dismissUpdate } from './updater'
+import { rutaDeRecurso } from './resource-paths'
 
 // ── Single instance lock ──────────────────────────────
 const gotLock = app.requestSingleInstanceLock()
@@ -582,10 +583,7 @@ ipcMain.handle('update-plugins', async () => {
 // ── TMDB Discover IPC ─────────────────────────
 
 function getRunnerPath(scriptName: string): string {
-  if (process.env.VITE_DEV_SERVER_URL) {
-    return path.join(__dirname, '..', 'electron', scriptName)
-  }
-  return path.join(process.resourcesPath || app.getAppPath(), scriptName)
+  return rutaDeRecurso(scriptName)
 }
 
 function spawnPython(scriptName: string, args: string[]): { cmd: string; allArgs: string[] } {

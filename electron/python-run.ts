@@ -15,11 +15,26 @@ const DEFAULT_JACKETT_INDEXERS = [
 ]
 
 export function pythonPath(): string {
-  return process.env.TDP_PYTHON || 'python3'
+  if (process.env.TDP_PYTHON) return process.env.TDP_PYTHON
+  // En Windows no hay 'python3': el interprete se llama 'python' (o 'py').
+  return process.platform === 'win32' ? 'python' : 'python3'
 }
 
 export function scriptPath(scriptName: string): string {
-  return path.join(__dirname, '..', 'electron', scriptName)
+  // Se busca el script donde esté: junto al bundle (dist-electron/../electron) o
+  // en el directorio del proyecto, para que sirva tanto en el servidor web como
+  // ejecutando desde el código.
+  const candidatos = [
+    path.join(__dirname, '..', 'electron', scriptName),
+    path.join(process.cwd(), 'electron', scriptName),
+    path.join(__dirname, scriptName),
+  ]
+  for (const c of candidatos) {
+    try {
+      if (fs.existsSync(c)) return c
+    } catch { /* siguiente */ }
+  }
+  return candidatos[0]
 }
 
 /**
