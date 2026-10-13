@@ -182,6 +182,10 @@ export interface ElectronAPI {
   onUpdateDownloadProgress: (callback: (percent: number) => void) => () => void
   onUpdateDownloaded: (callback: () => void) => () => void
   onUpdateError: (callback: (message: string) => void) => () => void
+
+  getLibrary: () => Promise<any>
+  deleteLibraryItem: (payload: any) => Promise<any>
+  getLibraryPoster: (kind: string, folder: string) => Promise<string | null>
 }
 
 // ── Helper: typed access to ElectronAPI ──
@@ -295,6 +299,10 @@ export const webAPI: ElectronAPI = {
   onUpdateDownloadProgress: () => noopUnsub,
   onUpdateDownloaded: () => noopUnsub,
   onUpdateError: () => noopUnsub,
+
+  getLibrary: () => webFetch('/api/library'),
+  deleteLibraryItem: (payload: any) => webFetch('/api/library/delete', 'POST', payload),
+  getLibraryPoster: (kind: string, folder: string) => Promise.resolve(`/api/library/poster?t=${kind}&f=${encodeURIComponent(folder)}`),
 }
 
 // Browser mode: expose the shim as window.electronAPI so components that

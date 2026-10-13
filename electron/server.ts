@@ -19,7 +19,7 @@ import { listWatchlist, getWatchlistItem, addWatchlistItem, updateWatchlistItem,
 import { startMonitor, stopMonitor, kickMonitor, forceCheckItem, getMonitorStatus, getMonitorLastSummary, startUpgradeScan, getUpgradeScan, applyUpgrade, getCalendar, healLibraryFolders } from './monitor'
 import { reconcileDebrid } from './debrid-reconcile'
 import { getAccountStatus, isInCooldown } from './debrid-status'
-import { scanLibrary, deleteMovie, deleteSeries, deleteSeason, deleteEpisode, resolveTargetPath, fetchJellyfinPoster } from './library'
+import { scanLibrary, deleteLibraryItem, fetchJellyfinPoster } from './library'
 import { TorboxAPI } from './torbox'
 import { RealDebridAPI, RD_OPENSOURCE_CLIENT_ID } from './realdebrid'
 import { eventBus } from './event-bus'
@@ -498,31 +498,9 @@ async function route(req: http.IncomingMessage, res: http.ServerResponse) {
       }
       if (api === 'library/delete' && method === 'POST') {
         const body = await readBody(req)
-        const type = String(body.type || '')
-        const dir = typeof body.dir === 'string' ? body.dir : ''
-        const title = typeof body.title === 'string' ? body.title : ''
-        const season = typeof body.season === 'string' ? body.season : ''
-        const file = typeof body.file === 'string' ? body.file : ''
-        const forgetHistory = Boolean(body.forgetHistory)
-        const settings = getSettings()
-        let result
-        try {
-          if (type === 'movie') {
-            result = await deleteMovie(resolveTargetPath(settings.movies_folder, { dir, title }), forgetHistory)
-          } else if (type === 'series') {
-            result = await deleteSeries(resolveTargetPath(settings.series_folder, { dir, title }), forgetHistory)
-          } else if (type === 'season') {
-            result = await deleteSeason(resolveTargetPath(settings.series_folder, { dir, title, sub: season }), forgetHistory)
-          } else if (type === 'episode') {
-            result = await deleteEpisode(resolveTargetPath(settings.series_folder, { dir, title, sub: season, file }), forgetHistory)
-          } else {
-            return sendJson(res, 400, { success: false, error: 'type must be movie|series|season|episode' })
-          }
-        } catch (e: any) {
-          return sendJson(res, 400, { success: false, error: e.message })
-        }
-        if (!result.ok) return sendJson(res, 400, { success: false, error: result.error })
-        return sendJson(res, 200, { success: true, data: result })
+        const delRes = await deleteLibraryItem(body)
+        if (!delRes.ok) return sendJson(res, 400, { success: false, error: delRes.error })
+        return sendJson(res, 200, { success: true, data: delRes.data })
       }
 
       // ── Monitor control ───────────────────────────────────
@@ -884,31 +862,59 @@ async function route(req: http.IncomingMessage, res: http.ServerResponse) {
   send(res, 200, mime[ext] || 'application/octet-stream', fs.readFileSync(filePath))
 }
 
-// ── Boot ─────────────────────────────────────────────────
-initDB()
-try { ensureSearchEnv(getSettings().tmdb_api_key || '') } catch (e: any) { console.error('[server] search env init failed:', e.message) }
-try { initMetaSearch() } catch (e: any) { console.error('[server] metasearch init failed:', e.message) }
-startWorker(null)
-try { startMonitor() } catch (e: any) { console.error('[server] monitor start failed:', e.message) }
+// ── Server Lifecycle ───────────────────────────────────────
+let _server: http.Server | null = null
 
-const server = http.createServer((req, res) => {
-  route(req, res).catch((err) => {
-    console.error('[server] unhandled route error:', err)
-    try { sendJson(res, 500, { success: false, error: err.message }) } catch { /* already sent */ }
+export function startWebServer(port = PORT, host = HOST): http.Server {
+  if (_server) return _server
+  initDB()
+  try { ensureSearchEnv(getSettings().tmdb_api_key || '') } catch (e: any) { console.error('[server] search env init failed:', e.message) }
+  try { initMetaSearch() } catch (e: any) { console.error('[server] metasearch init failed:', e.message) }
+  try { startMonitor() } catch (e: any) { console.error('[server] monitor start failed:', e.message) }
+
+  _server = http.createServer((req, res) => {
+    route(req, res).catch((err) => {
+      console.error('[server] unhandled route error:', err)
+      try { sendJson(res, 500, { success: false, error: err.message }) } catch { /* already sent */ }
+    })
   })
-})
 
-server.listen(PORT, HOST, () => {
-  console.log(`[server] MediaPilot web server listening on http://${HOST}:${PORT}`)
-})
+  _server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`[server] Port ${port} is already in use, using existing instance`)
+    } else {
+      console.error('[server] Error:', err.message)
+    }
+  })
+
+  _server.listen(port, host, () => {
+    console.log(`[server] MediaPilot server listening on http://${host}:${port}`)
+  })
+
+  return _server
+}
+
+export function stopWebServer() {
+  if (_server) {
+    sseUnsubs.forEach((fn) => fn())
+    try { stopMonitor() } catch { /* ignore */ }
+    _server.close()
+    _server = null
+  }
+}
+
+// Auto-start when run directly as standalone script (e.g. node dist-electron/server.cjs)
+if (typeof process !== 'undefined' && process.argv[1]?.endsWith('server.cjs')) {
+  startWorker(null)
+  startWebServer(PORT, HOST)
+}
 
 process.on('SIGTERM', () => {
-  sseUnsubs.forEach((fn) => fn())
-  try { stopMonitor() } catch { /* ignore */ }
+  stopWebServer()
   process.exit(0)
 })
 process.on('SIGINT', () => {
-  sseUnsubs.forEach((fn) => fn())
-  try { stopMonitor() } catch { /* ignore */ }
+  stopWebServer()
   process.exit(0)
 })
+
