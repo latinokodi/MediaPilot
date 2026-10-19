@@ -94,6 +94,11 @@ const api = {
     ipcRenderer.on('update-error', (_e, message) => callback(message))
     return () => ipcRenderer.removeAllListeners('update-error')
   },
+
+  // ── Biblioteca ──
+  getLibrary: (): Promise<any> => ipcRenderer.invoke('get-library'),
+  deleteLibraryItem: (payload: any): Promise<any> => ipcRenderer.invoke('delete-library-item', payload),
+  getLibraryPoster: (kind: string, folder: string): Promise<string | null> => ipcRenderer.invoke('get-library-poster', kind, folder),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', api)

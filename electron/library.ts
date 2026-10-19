@@ -542,3 +542,41 @@ export async function deleteSeries(targetPath: string, forgetHistory: boolean): 
   }
   return out
 }
+
+export interface DeletePayload {
+  type: string
+  dir?: string
+  title?: string
+  season?: string
+  file?: string
+  forgetHistory?: boolean
+}
+
+/** Unified deletion dispatcher with safe target path resolution. */
+export async function deleteLibraryItem(body: DeletePayload): Promise<{ ok: boolean; data?: DeleteResult; error?: string }> {
+  const type = String(body.type || '')
+  const dir = typeof body.dir === 'string' ? body.dir : ''
+  const title = typeof body.title === 'string' ? body.title : ''
+  const season = typeof body.season === 'string' ? body.season : ''
+  const file = typeof body.file === 'string' ? body.file : ''
+  const forgetHistory = Boolean(body.forgetHistory)
+  const settings = getSettings()
+  let result: DeleteResult
+  try {
+    if (type === 'movie') {
+      result = await deleteMovie(resolveTargetPath(settings.movies_folder, { dir, title }), forgetHistory)
+    } else if (type === 'series') {
+      result = await deleteSeries(resolveTargetPath(settings.series_folder, { dir, title }), forgetHistory)
+    } else if (type === 'season') {
+      result = await deleteSeason(resolveTargetPath(settings.series_folder, { dir, title, sub: season }), forgetHistory)
+    } else if (type === 'episode') {
+      result = await deleteEpisode(resolveTargetPath(settings.series_folder, { dir, title, sub: season, file }), forgetHistory)
+    } else {
+      return { ok: false, error: 'type must be movie|series|season|episode' }
+    }
+  } catch (e: any) {
+    return { ok: false, error: e.message }
+  }
+  if (!result.ok) return { ok: false, error: result.error }
+  return { ok: true, data: result }
+}

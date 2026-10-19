@@ -1,7 +1,32 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Film, Tv, Trash2, Search, ChevronDown, ChevronRight, RefreshCw, X, HardDrive } from 'lucide-react'
 import { useT } from '../i18n'
-import { http } from '../hooks/http'
+import { http, isWebMode } from '../hooks/http'
+import { getElectronAPI } from '../types/electron'
+
+function MoviePoster({ dir, poster, title }: { dir: string; poster: string; title: string }) {
+  const [src, setSrc] = useState(poster)
+
+  useEffect(() => {
+    if (poster && !isWebMode()) {
+      getElectronAPI()?.getLibraryPoster?.('movie', dir).then((dataUrl) => {
+        if (dataUrl) setSrc(dataUrl)
+      })
+    }
+  }, [poster, dir])
+
+  if (!poster) return null
+
+  return (
+    <img
+      src={src}
+      alt={title}
+      className="relative w-full h-full object-cover"
+      loading="lazy"
+      onError={(e) => { e.currentTarget.style.display = 'none' }}
+    />
+  )
+}
 
 interface LibEpisode {
   file: string
@@ -80,7 +105,8 @@ export function LibraryView({ showToast }: { showToast: (msg: string, type?: 'su
   const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await http<any>('/api/library', 'GET')
+      const ea = getElectronAPI()
+      const res = await (ea ? ea.getLibrary() : http<any>('/api/library', 'GET'))
       if (res?.success) setData(res.data)
       else if (res?.error) showToast(res.error, 'error')
     } catch (e: any) {
@@ -120,14 +146,16 @@ export function LibraryView({ showToast }: { showToast: (msg: string, type?: 'su
     if (!pending) return
     setDeleting(true)
     try {
-      const res = await http<any>('/api/library/delete', 'POST', {
+      const ea = getElectronAPI()
+      const payload = {
         type: pending.type,
         dir: pending.dir,
         title: pending.title,
         season: pending.season,
         file: pending.file,
         forgetHistory,
-      })
+      }
+      const res = await (ea ? ea.deleteLibraryItem(payload) : http<any>('/api/library/delete', 'POST', payload))
       if (res?.success) {
         const d = res.data
         showToast(`${t.library.deletedToast} ${fmtBytes(d.freedBytes)}`)
@@ -209,15 +237,7 @@ export function LibraryView({ showToast }: { showToast: (msg: string, type?: 'su
                   <div className="absolute inset-0 flex items-center justify-center text-text-muted">
                     <Film size={34} strokeWidth={1.4} />
                   </div>
-                  {m.poster && (
-                    <img
-                      src={m.poster}
-                      alt={m.title}
-                      className="relative w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => { e.currentTarget.style.display = 'none' }}
-                    />
-                  )}
+                  <MoviePoster dir={m.dir} poster={m.poster} title={m.title} />
                   {m.inWatchlist && (
                     <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-bg-deep/85 text-success backdrop-blur-sm">
                       {t.library.inWatchlist}

@@ -10,6 +10,8 @@ import { RealDebridAPI, RD_OPENSOURCE_CLIENT_ID } from './realdebrid'
 import { startWorker, cancelLocalDownload } from './worker'
 import { initAutoUpdater, checkForUpdates, checkForUpdatesManual, downloadUpdate, installUpdate, dismissUpdate } from './updater'
 import { rutaDeRecurso } from './resource-paths'
+import { scanLibrary, deleteLibraryItem, fetchJellyfinPoster } from './library'
+import { startWebServer, stopWebServer } from './server'
 
 // ── Single instance lock ──────────────────────────────
 const gotLock = app.requestSingleInstanceLock()
@@ -105,6 +107,7 @@ app.whenReady().then(async () => {
     }, 2000)
   }
   initMetaSearch()  // starts Python runner dependency check
+  startWebServer(9650, '127.0.0.1')
   createWindow()
 
   // Init auto-updater after window exists for IPC
@@ -121,6 +124,7 @@ app.whenReady().then(async () => {
 })
 
 app.on('window-all-closed', () => {
+  stopWebServer()
   app.quit()
 })
 
@@ -920,3 +924,32 @@ ipcMain.handle('dismiss-update', () => {
   dismissUpdate()
   return { success: true }
 })
+
+// ── Biblioteca ──
+ipcMain.handle('get-library', async () => {
+  try {
+    return { success: true, data: await scanLibrary() }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('delete-library-item', async (_e, payload) => {
+  try {
+    const res = await deleteLibraryItem(payload)
+    return res.ok ? { success: true, data: res.data } : { success: false, error: res.error }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('get-library-poster', async (_e, kind: 'movie' | 'series', folder: string) => {
+  try {
+    const poster = await fetchJellyfinPoster(folder, kind)
+    if (!poster) return null
+    return `data:${poster.contentType};base64,${poster.buffer.toString('base64')}`
+  } catch {
+    return null
+  }
+})
+
