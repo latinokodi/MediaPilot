@@ -253,8 +253,9 @@ export function initDB(): void {
       COMMIT;
     `)
     console.log('[DB] grab_history reconstruida: watchlist_id ahora admite NULL (descargas manuales)')
+  }
 
-  
+
   // Create a default settings row if not exists
   const count = db.prepare('SELECT COUNT(*) as c FROM settings').get() as { c: number };
   if (count.c === 0) {
