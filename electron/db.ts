@@ -124,7 +124,10 @@ export function initDB(): void {
 
     CREATE TABLE IF NOT EXISTS grab_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      watchlist_id INTEGER NOT NULL,
+      -- NULL = descarga hecha a mano: no nace de la watchlist. Un NOT NULL aquí
+      -- hacía fallar el registro ("constraint failed: grab_history.watchlist_id")
+      -- y el monitor volvía a intentar bajar lo que ya estaba en disco.
+      watchlist_id INTEGER,
       tmdb_id INTEGER NOT NULL,
       media_type TEXT NOT NULL,
       season INTEGER,
@@ -211,6 +214,46 @@ export function initDB(): void {
   for (const sql of migrations) {
     try { db.exec(sql) } catch (_) { /* Column already exists */ }
   }
+
+  // grab_history.watchlist_id se creó como NOT NULL, así que una descarga manual
+  // (una película que no está en la watchlist) no se podía registrar: INSERT
+  // fallaba y el monitor no sabía que ese archivo ya estaba en disco. SQLite no
+  // permite quitar el NOT NULL con ALTER, así que se reconstruye la tabla una
+  // sola vez, conservando filas e índices.
+  const columnas = db.prepare(`PRAGMA table_info(grab_history)`).all() as Array<{ name: string; notnull: number }>
+  const wlCol = columnas.find((c) => c.name === 'watchlist_id')
+  if (wlCol && wlCol.notnull === 1) {
+    const nombres = columnas.map((c) => `"${c.name}"`).join(', ')
+    db.exec(`
+      BEGIN;
+      CREATE TABLE grab_history_nueva (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        watchlist_id INTEGER,
+        tmdb_id INTEGER NOT NULL,
+        media_type TEXT NOT NULL,
+        season INTEGER,
+        episode INTEGER,
+        kind TEXT NOT NULL DEFAULT 'episode',
+        title TEXT DEFAULT '',
+        language TEXT DEFAULT '',
+        source TEXT DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'grabbed',
+        torbox_id VARCHAR DEFAULT '',
+        info_hash VARCHAR DEFAULT '',
+        error VARCHAR DEFAULT '',
+        dest_folder VARCHAR DEFAULT '',
+        file_name VARCHAR DEFAULT '',
+        grabbed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      INSERT INTO grab_history_nueva (${nombres}) SELECT ${nombres} FROM grab_history;
+      DROP TABLE grab_history;
+      ALTER TABLE grab_history_nueva RENAME TO grab_history;
+      CREATE INDEX IF NOT EXISTS idx_grab_uniq ON grab_history(tmdb_id, media_type, season, episode);
+      CREATE INDEX IF NOT EXISTS idx_grab_wl ON grab_history(watchlist_id);
+      COMMIT;
+    `)
+    console.log('[DB] grab_history reconstruida: watchlist_id ahora admite NULL (descargas manuales)')
+
   
   // Create a default settings row if not exists
   const count = db.prepare('SELECT COUNT(*) as c FROM settings').get() as { c: number };
