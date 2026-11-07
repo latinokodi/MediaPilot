@@ -217,8 +217,9 @@ async function addMagnetHandler(magnet: string, service: string, type: string, d
     if (result.success && result.data) {
       const { id } = TorboxAPI.torrentIdentity(result.data)
       if (id) {
-        // ¿Duplicado? (spec B26) Con el nombre del torrent basta para ver si ese
-        // episodio ya está en disco/cola o si la temporada ya se baja en un pack.
+        // ¿Duplicado? (spec B26) El nombre que devuelve el debrid basta para ver
+        // si ese episodio ya está en disco/cola o si la temporada ya se está
+        // bajando en un pack. Si lo es, se quita del debrid y no se encola.
         let nombre = String((result.data as any).name || '') || nameFromMagnet(magnet)
         if (!nombre) {
           try {
@@ -336,9 +337,57 @@ async function catalogFetch(p: string): Promise<any> {
   return await httpsGetJson(`${CATALOG_BASE}${p}`)
 }
 
+// ── Comprobación de actualizaciones (modo servidor) ──────
+// En modo servidor no existe electron-updater: el botón «Buscar actualizaciones»
+// del shim web llama a /api/update/check y aquí se compara la versión local con el
+// último release publicado. El resultado se emite además por SSE para que el modal
+// de ajustes (que escucha update-available / update-not-available) se actualice.
+const UPDATE_REPO = 'latinokodi/tordownloader-pro'
+const UPDATE_HINT = 'En modo servidor no hay auto-descarga: aplica la actualización con git pull && npm ci && npm run build:server, y reinicia el servicio.'
+
+function versionParts(v: string): number[] {
+  return String(v || '').replace(/^v/i, '').split(/[.+-]/).map((p) => parseInt(p, 10) || 0)
+}
+
+function isNewerVersion(latest: string, current: string): boolean {
+  const a = versionParts(latest)
+  const b = versionParts(current)
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const x = a[i] || 0
+    const y = b[i] || 0
+    if (x !== y) return x > y
+  }
+  return false
+}
+
+async function checkServerUpdate(emit: boolean): Promise<{ current: string; latest: string; available: boolean; url: string; publishedAt?: string; error?: string }> {
+  const current = String(PKG.version || '1.0.0')
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 12000)
+  try {
+    const resp = await fetch(`https://api.github.com/repos/${UPDATE_REPO}/releases/latest`, {
+      headers: { 'User-Agent': `MediaPilot/${current}`, Accept: 'application/vnd.github+json' },
+      signal: ctrl.signal,
+    })
+    if (!resp.ok) throw new Error(`GitHub respondió ${resp.status}`)
+    const rel: any = await resp.json()
+    const latest = String(rel.tag_name || rel.name || '').replace(/^v/i, '').trim()
+    if (!latest) throw new Error('El último release no trae número de versión')
+    const available = isNewerVersion(latest, current)
+    if (emit) eventBus.emit(available ? 'update-available' : 'update-not-available', available ? latest : {})
+    return { current, latest, available, url: rel.html_url || '', publishedAt: rel.published_at }
+  } catch (e: any) {
+    const msg = e?.name === 'AbortError' ? 'GitHub no respondió a tiempo' : (e?.message || 'No se pudo comprobar')
+    if (emit) eventBus.emit('update-error', msg)
+    return { current, latest: '', available: false, url: '', error: msg }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 // ── SSE event fan-out ────────────────────────────────────
 const sseClients = new Set<http.ServerResponse>()
-const SSE_CHANNELS = ['downloads-updated', 'app-log', 'search-progress', 'search-error', 'latino-search-progress', 'watchlist-updated', 'monitor-updated', 'latino-ddl-pending']
+const SSE_CHANNELS = ['downloads-updated', 'app-log', 'search-progress', 'search-error', 'latino-search-progress', 'watchlist-updated', 'monitor-updated', 'latino-ddl-pending', 'update-available', 'update-not-available', 'update-download-progress', 'update-downloaded', 'update-error']
 const sseUnsubs = SSE_CHANNELS.map((ch) =>
   eventBus.on(ch, (data) => {
     const payload = `event: ${ch}\ndata: ${JSON.stringify(data ?? {})}\n\n`
@@ -718,6 +767,15 @@ async function route(req: http.IncomingMessage, res: http.ServerResponse) {
       if (api === 'plugins/check' || api === 'plugins/update') return sendJson(res, 200, { success: false, error: 'Plugin management is not available in web mode' })
       if (api === 'logs' && method === 'GET') return sendJson(res, 200, [...logBuffer])
       if (api === 'version' && method === 'GET') return sendJson(res, 200, PKG.version || '1.0.0')
+      if (api === 'update/check' && method === 'GET') {
+        const out = await checkServerUpdate(true)
+        return sendJson(res, 200, { success: !out.error, data: out, error: out.error })
+      }
+      if (api === 'update/download' && method === 'POST') {
+        // En modo servidor no hay electron-updater: la actualización se aplica en el host.
+        eventBus.emit('update-error', UPDATE_HINT)
+        return sendJson(res, 200, { success: false, error: UPDATE_HINT })
+      }
 
       // Real-Debrid
       if (api === 'rd/auth/start' && method === 'POST') {

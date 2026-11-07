@@ -286,15 +286,17 @@ export const webAPI: ElectronAPI = {
   catalogItems: (type, id) => webFetch(`/api/catalog/items/${type}/${id}`),
   catalogMeta: (type, imdbId) => webFetch(`/api/catalog/meta/${type}/${imdbId}`),
 
-  checkForUpdates: () => Promise.resolve({ success: false, error: 'Auto-update is not available in web mode' }),
-  downloadUpdate: () => Promise.resolve({ success: false, error: 'Not available in web mode' }),
-  installUpdate: () => Promise.resolve({ success: false, error: 'Not available in web mode' }),
+  checkForUpdates: () => webFetch('/api/update/check'),
+  downloadUpdate: () => webFetch('/api/update/download', 'POST'),
+  installUpdate: () => Promise.resolve({ success: false, error: 'En modo servidor, reinicia el servicio tras actualizar' }),
   dismissUpdate: () => Promise.resolve({ success: true }),
-  onUpdateAvailable: () => noopUnsub,
-  onUpdateNotAvailable: () => noopUnsub,
-  onUpdateDownloadProgress: () => noopUnsub,
-  onUpdateDownloaded: () => noopUnsub,
-  onUpdateError: () => noopUnsub,
+
+  // Eventos de auto-update: en modo servidor los emite /api/update/check por SSE.
+  onUpdateAvailable: (cb) => subscribe('update-available', cb),
+  onUpdateNotAvailable: (cb) => subscribe('update-not-available', cb),
+  onUpdateDownloadProgress: (cb) => subscribe('update-download-progress', cb),
+  onUpdateDownloaded: (cb) => subscribe('update-downloaded', cb),
+  onUpdateError: (cb) => subscribe('update-error', cb),
 }
 
 // Browser mode: expose the shim as window.electronAPI so components that
