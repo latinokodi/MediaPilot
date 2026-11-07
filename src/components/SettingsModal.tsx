@@ -445,7 +445,7 @@ export function SettingsModal({ onClose, showToast }: Props) {
               <input
                 type="text"
                 className="input-field w-full"
-                placeholder="/media/movies"
+                placeholder="/srv/storage/arr-data/media/movies"
                 value={settings?.movies_folder || ''}
                 onChange={(e) => setSettings((s) => s ? { ...s, movies_folder: e.target.value } : null)}
               />
@@ -456,7 +456,7 @@ export function SettingsModal({ onClose, showToast }: Props) {
               <input
                 type="text"
                 className="input-field w-full"
-                placeholder="/media/tv"
+                placeholder="/srv/storage/arr-data/media/tv"
                 value={settings?.series_folder || ''}
                 onChange={(e) => setSettings((s) => s ? { ...s, series_folder: e.target.value } : null)}
               />
@@ -590,7 +590,7 @@ export function SettingsModal({ onClose, showToast }: Props) {
                     <label className="block text-[11px] font-mono text-text-muted mb-1">{t.settings.jellyfinUrl}</label>
                     <input
                       className="input-field w-full"
-                      placeholder="http://localhost:8096"
+                      placeholder="http://127.0.0.1:8096"
                       value={settings?.jellyfin_url || ''}
                       onChange={(e) => setSettings((s) => s ? { ...s, jellyfin_url: e.target.value } : null)}
                     />

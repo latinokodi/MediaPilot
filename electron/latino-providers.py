@@ -635,7 +635,7 @@ def provider_cinecalidad(imdb_id, media_type, season=None, episode=None):
 #
 # El índice del addon (provider_cinecalidad) sólo lista TORRENTS, y Cinecalidad
 # publica cada episodio primero como DESCARGA DIRECTA (megaup/mediafire/...):
-# comprobado con Demo2 S01E05 — la página del episodio existía con link
+# comprobado con Linternas S01E05 — la página del episodio existía con link
 # megaup y 0 magnets, mientras el índice devolvía 0 streams. Sin esta
 # comprobación la fase latino reportaba "0 resultados" y el perfil latino_first
 # bajaba el inglés creyendo que no había latino.
@@ -695,7 +695,7 @@ def _cc_slug_like(path, titles):
         nt = normalize_title(t)
         if nt and nt in norm:
             return True
-    # Títulos traducidos de forma distinta (Demo2-ES vs Demo2-EN): similitud
+    # Títulos traducidos de forma distinta (Linternas vs Lanterns): similitud
     # alta en el slug, sólo cuando el título inglés no aparece literalmente.
     for t in titles:
         nt = normalize_title(t).replace(' ', '-')

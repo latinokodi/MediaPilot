@@ -11,27 +11,27 @@ Feature: Cooldown del debrid
     And la hora actual es "2026-09-20T05:00:00Z"
     And estos candidatos
       | título                   | cached |
-      | Demo S01E01 1080p WEB     | sí     |
-      | Demo.S01E02.1080p.x265    | no     |
+      | FBI S01E01 1080p WEB     | sí     |
+      | FBI.S01E02.1080p.x265    | no     |
     When intento bajarlos
     Then se intentan "<esperados>"
 
     Examples:
       # en cooldown (hasta el día siguiente) → sólo el cacheado
       | hasta                | esperados            |
-      | 2026-09-21T08:03:35Z | Demo S01E01 1080p WEB |
+      | 2026-09-21T08:03:35Z | FBI S01E01 1080p WEB |
       # cooldown ya vencido → todos
-      | 2026-09-19T08:03:35Z | Demo S01E01 1080p WEB, Demo.S01E02.1080p.x265 |
+      | 2026-09-19T08:03:35Z | FBI S01E01 1080p WEB, FBI.S01E02.1080p.x265 |
       # sin cooldown registrado → todos
-      |                      | Demo S01E01 1080p WEB, Demo.S01E02.1080p.x265 |
+      |                      | FBI S01E01 1080p WEB, FBI.S01E02.1080p.x265 |
 
   Scenario: En cooldown sin nada cacheado el objetivo se difiere, sin gastar intento
     Given el debrid tiene cooldown hasta "2026-09-21T08:03:35Z"
     And la hora actual es "2026-09-20T05:00:00Z"
     And estos candidatos
       | título                   | cached |
-      | Demo.S01E02.1080p.x265    | no     |
-      | Demo.S01E03.1080p.WEB     | no     |
+      | FBI.S01E02.1080p.x265    | no     |
+      | FBI.S01E03.1080p.WEB     | no     |
     When intento bajarlos
     Then el objetivo queda "diferido por cooldown"
     And no se intenta ningún candidato

@@ -564,6 +564,8 @@ async function runTorboxDownload(tid: string, dlData: any, settings: any, token:
     console.log(`[Worker] TorBox download complete: ${dlData.name || tid} → ${destFolder}`)
 
     // ── Nombre canónico para Jellyfin (spec B27) ──
+    // Se hace ANTES de los subtítulos y del historial: así el .srt se guarda con
+    // el nombre definitivo y el monitor registra el nombre que ve Jellyfin.
     try {
       const renamed = await renameEpisodesForJellyfin(downloadedVideoPaths)
       if (renamed.renamed > 0) {

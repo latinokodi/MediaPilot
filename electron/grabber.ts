@@ -38,14 +38,14 @@ export interface GrabTarget {
   mode?: 'upgrade'
   /**
    * Duración esperada (min). Se usa para validar el release ANTES de bajar el
-   * archivo: un episodio/película homónima dura otra cosa (Demo7 2015 =
+   * archivo: un episodio/película homónima dura otra cosa (Dark Matter 2015 =
    * 43 min vs 2024 = 53 min). Si falta, el preflight no bloquea nada.
    */
   runtime_min?: number
   /**
    * Títulos alternativos de TMDB. Los rellena `grab()`/`findLatinoForUpgrade()`
    * antes de puntuar: hay releases que usan el título alternativo
-   * ("Special Ops Demo9" para "Demo9") y sin ellos se rechazarían.
+   * ("Special Ops Lioness" para "Lioness") y sin ellos se rechazarían.
    */
   alt_titles?: string[]
 }
@@ -174,15 +174,15 @@ function scoreResult(r: GrabResultItem, target: GrabTarget): number {
     if (/(1080p|1080)/i.test(lower)) score += 60
     else if (/(2160p|4k\b|uhd)/i.test(lower)) score += 80
     else if (/(720p)/i.test(lower)) score += 30
-    // ¿Es de la serie que buscamos? "Demo7 S02E03 720p WEBRip x264-MATTER"
-    // (serie Dark, 2017) aparecía en la búsqueda de "Demo7" porque el
+    // ¿Es de la serie que buscamos? "Dark S02E03 720p WEBRip x264-MATTER"
+    // (serie Dark, 2017) aparecía en la búsqueda de "Dark Matter" porque el
     // grupo del release parece parte del título. Los proveedores latino se
     // buscan por IMDB id, así que ahí solo se penaliza (nombres localizados).
     if (!seriesNameMatches(t, [target.title, target.original_title], target.alt_titles || [])) {
       if (!r.latino) return -750
       score -= 250
     } else if (target.year) {
-      // Homónimas (Demo7 2015 vs 2024): los grupos incluyen el año de
+      // Homónimas (Dark Matter 2015 vs 2024): los grupos incluyen el año de
       // estreno justo para distinguirlas — si viene, tiene que coincidir.
       const y = releaseYear(t)
       if (y === parseInt(String(target.year), 10)) score += 50
@@ -641,7 +641,7 @@ export async function grab(target: GrabTarget): Promise<GrabOutcome> {
     } catch { /* no key or network */ }
   }
   // Títulos alternativos (TMDB) antes de puntuar: hay releases con el título
-  // alternativo ("Special Ops Demo9") que si no se rechazarían por nombre.
+  // alternativo ("Special Ops Lioness") que si no se rechazarían por nombre.
   if (!target.alt_titles || target.alt_titles.length === 0) {
     try { target.alt_titles = await getAltTitlesCached(target.tmdb_id, target.media_type) } catch { /* se puntúa sin ellos */ }
   }
@@ -655,7 +655,7 @@ export async function grab(target: GrabTarget): Promise<GrabOutcome> {
   }
   // ¿Ya lo tenemos? (spec B26) Un episodio que ya está en disco o en la cola no
   // se vuelve a bajar: era el doble gasto de encolar el pack de temporada y los
-  // episodios sueltos (30 GB de más y dos copias por capítulo).
+  // episodios sueltos (Silo S02 → 30 GB de más, dos copias por capítulo).
   // Los `upgrade` quedan fuera: ahí repetir la descarga ES el objetivo.
   if (target.mode !== 'upgrade' && target.kind === 'episode' && target.season && target.episode) {
     try {

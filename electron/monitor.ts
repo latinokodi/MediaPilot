@@ -535,7 +535,7 @@ const HEAL_INTERVAL_MS = 30 * 60 * 1000
 
 /**
  * Repara carpetas paralelas del mismo título (p. ej. porque TMDB cambió el
- * título: "Demo9 (ES)" → "Demo9 (EN)") antes de seguir grabando: si no, el
+ * título: "Operativo Lioness" → "Lioness") antes de seguir grabando: si no, el
  * episodio nuevo cae en la carpeta duplicada y la biblioteca se parte en dos.
  * Corre como mucho cada 30 min (o forzado) y solo refresca Jellyfin si movió
  * algo.
@@ -653,7 +653,7 @@ export function forceCheckItem(itemId: number): boolean {
 // cadena y el ÚNICO límite es el número de descargas simultáneas
 // (settings.max_concurrent_downloads, 3 por defecto). Antes el tick intentaba 5
 // por vuelta y el resto esperaba media hora, así que bajar la serie completa de
-// Demo (~180 capítulos) costaba ~20 h.
+// FBI (~180 capítulos) costaba ~20 h.
 const BACKFILL_INTERVAL_MS = 15_000
 let lastQueueLog = 0
 /** Última búsqueda de backfill hecha estando el debrid en cooldown (ritmo lento). */

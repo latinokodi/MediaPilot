@@ -201,7 +201,7 @@ function watchlistLookup(title: string, year: string): { inWatchlist: boolean; w
     const db = getDB()
     const row = db.prepare('SELECT id FROM watchlist WHERE lower(title) = lower(?) LIMIT 1').get(title) as any
     if (row) return { inWatchlist: true, watchlistId: row.id }
-    // Try the "Demo2 (ES)"/"Demo2 (EN)" style mismatch: match by year + loose title prefix.
+    // Try the "Linternas"/"Lanterns" style mismatch: match by year + loose title prefix.
     const rows = db.prepare('SELECT id, title FROM watchlist').all() as any[]
     const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
     const nt = norm(title)

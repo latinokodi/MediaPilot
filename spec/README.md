@@ -59,16 +59,16 @@ Etiquetas:
 
 ## Historial de por qué existe (fallos reales que ahora son escenarios)
 
-- `Standoff.The.Demo.Power.and.Paranoia`, `Demo International` y `Demo True`
-  entraron en `Demo (2018)`: el comparador aceptaba el título como subcadena o con
+- `Standoff.The.FBI.Power.and.Paranoia`, `FBI International` y `FBI True`
+  entraron en `FBI (2018)`: el comparador aceptaba el título como subcadena o con
   un token de más. Hoy el título tiene que **ser** el título (o un alt title de
   TMDB, o la parte final del mismo) → `release-name.feature`.
-- `Demo7 S02E04` (serie de 2024) se bajó de la serie de 2015 (43 min vs 53):
+- `Dark Matter S02E04` (serie de 2024) se bajó de la serie de 2015 (43 min vs 53):
   ahora la duración se verifica con la cabecera antes de bajar nada →
   `duration-preflight.feature`.
 - La carpeta creada por un cambio de título de TMDB se quedaba con lo nuevo:
   hoy consolida en la carpeta **memorizada** en `media_folders` →
   `folder-resolution.feature` y `library-layout.feature`.
 
-Método: **spec-driven development** con ciclo BDD → TDD
-(escenario primero, lógica pura después, y por último el cableado a la base real).
+Método tomado de la *skills folder* (`/srv/storage/antigravity-awesome-skills`):
+`skills/spec-driven-development`, `skills/tdd`, `skills/cucumber-skill`.

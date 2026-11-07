@@ -158,8 +158,8 @@ const lastReconcile = { at: 0 }
 /**
  * Carpeta destino de lo adoptado. Se calcula desde el TÍTULO EMPAREJADO (tmdb id
  * y año del título monitorizado), nunca desde el nombre del torrent: hay releases
- * cuyo nombre es un simple fichero en minúsculas ("demo.s07e20.1080p.web.h264-x.mkv")
- * y de ahí salía una carpeta fantasma ("demo s07e20 web successfulcrab mkv/Season 1")
+ * cuyo nombre es un simple fichero en minúsculas ("fbi.s07e20.1080p.web.h264-x.mkv")
+ * y de ahí salía una carpeta fantasma ("fbi s07e20 web successfulcrab mkv/Season 1")
  * con el episodio dentro. Lo destapó spec/features/debrid-reconcile.feature.
  */
 export async function adoptionDestination(

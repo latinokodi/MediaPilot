@@ -36,9 +36,9 @@ const PAREN_YEAR_RE = /[\[\(]?\s*(19\d{2}|20\d{2})\s*[\]\)]?/
 /**
  * Dónde termina el TÍTULO de un release: en el primer marcador de temporada
  * (`S01E01`, `S01`, `1x05`), año o etiqueta de calidad. Sin esto, un nombre como
- * `Demo.S01.DLMux.1080p.x264.AC3.ITA-ENG.Sub.ENG.by.quintrix` producía el "título"
+ * `FBI.S01.DLMux.1080p.x264.AC3.ITA-ENG.Sub.ENG.by.quintrix` producía el "título"
  * entero y la biblioteca se llenaba de carpetas fantasma
- * (`Demo DLMux ITA ENG Sub ENG by quintrix/Season 1`).
+ * (`FBI DLMux ITA ENG Sub ENG by quintrix/Season 1`).
  */
 const RELEASE_CUT_RE = /\bS\d{1,2}\s*E\d{1,3}\b|\bS\d{1,2}\b|\b\d{1,2}x\d{1,3}\b|\b(19|20)\d{2}\b|\b(1080p|720p|2160p|480p|576p|4k|uhd|web-?dl|webrip|hdtv|bluray|blu-ray|brrip|x264|x265|h\.?264|h\.?265|hevc|av1|amzn|dsnp|atvp|nf|itunes|divx|xvid|dvdrip)\b/i
 
@@ -57,7 +57,7 @@ export function parseReleaseName(name: string): ParsedRelease {
   const seMatch = SEASON_EP_RE.exec(raw)
   if (seMatch) season = parseInt(seMatch[1], 10)
   if (season === undefined) {
-    // Pack de temporada sin episodio ("Demo.S01.COMPLETE...", "Season 2 1080p"):
+    // Pack de temporada sin episodio ("FBI.S01.COMPLETE...", "Season 2 1080p"):
     // sin esto la temporada quedaba vacía y el destino acababa en "Season 1".
     const pack = /\bS(\d{1,2})\b/.exec(raw) || /\b(?:season|temporada)[\s._-]*(\d{1,2})\b/i.exec(raw)
     if (pack) season = parseInt(pack[1], 10)
@@ -188,14 +188,14 @@ function looseTokens(value: string): string[] {
 
 /**
  * ¿Dos nombres de carpeta son el MISMO título? El título que publica TMDB
- * cambia con el tiempo ("Demo9 (ES)" -> "Demo9 (EN)", "El tigre y el dragón"
+ * cambia con el tiempo ("Operativo Lioness" -> "Lioness", "El tigre y el dragón"
  * -> "Tigre y dragón") y comparar solo por igualdad de cadena creaba carpetas
  * paralelas para la misma serie/película (la biblioteca se partía en dos y
  * Jellyfin mostraba el título duplicado). Reglas:
  *   - años distintos (ambos presentes) ⇒ NO son el mismo título (homónimas:
- *     Demo7 2015 vs 2024).
+ *     Dark Matter 2015 vs 2024).
  *   - mismos tokens (ignorando artículos y orden) ⇒ sí.
- *   - un título es subconjunto del otro ("Demo9" ⊂ "Demo9") ⇒ sí,
+ *   - un título es subconjunto del otro ("Lioness" ⊂ "Operativo Lioness") ⇒ sí,
  *     pero solo si ambos traen año (sin año, el riesgo de fusionar dos cosas
  *     distintas es mayor que el de una carpeta duplicada).
  */
@@ -216,7 +216,7 @@ function sameShowFolderName(a: string, b: string): boolean {
 /**
  * ¿Estos dos nombres de carpeta son el mismo título? Además del año y los
  * tokens, acepta la comparación normalizada (acentos/puntuación) para casos
- * como "Demo3" vs "Star Trek_ Demo3".
+ * como "Star Trek: Strange New Worlds" vs "Star Trek_ Strange New Worlds".
  */
 export function sameTitleFolder(a: string, b: string): boolean {
   const na = normalizeName(a)
@@ -246,8 +246,8 @@ function folderMediaCount(root: string, folderName: string, kind: 'movie' | 'ser
  * Nivel de coincidencia con los candidatos:
  *   2 = es el MISMO título (igual, igual salvo acentos/puntuación o mismos
  *       tokens con el año compatible)
- *   1 = un título es subconjunto del otro con el año presente ("Demo9" ⊂
- *       "Demo9")
+ *   1 = un título es subconjunto del otro con el año presente ("Lioness" ⊂
+ *       "Operativo Lioness")
  *   0 = no corresponde
  * El nivel decide antes que nada; el número de archivos solo desempata entre
  * carpetas del MISMO título (así la carpeta huérfana deja de recibir contenido
@@ -264,7 +264,7 @@ function folderMatchLevel(dirName: string, candidates: string[], year?: number):
     const nDir = meaningfulName(dirName)
     if (nDir && (nDir === meaningfulName(withYear) || nDir === meaningfulName(cand))) { best = Math.max(best, 2); continue }
     if (!sameShowFolderName(dirName, withYear)) continue
-    // Subconjunto ("Demo9" ⊂ "Demo9"): solo vale con años.
+    // Subconjunto ("Lioness" ⊂ "Operativo Lioness"): solo vale con años.
     const small = Math.min(new Set(looseTokens(dirName)).size, new Set(looseTokens(withYear)).size)
     const big = Math.max(new Set(looseTokens(dirName)).size, new Set(looseTokens(withYear)).size)
     best = Math.max(best, small === big ? 2 : 1)
@@ -392,7 +392,7 @@ export async function computeDestination(
 
   const tmdbId = opts.tmdbId || meta?.id
   // El año del objetivo manda. El de la búsqueda por nombre solo se acepta si
-  // resolvió al MISMO título: en homónimas ("Demo7" 2015/2024) la
+  // resolvió al MISMO título: en homónimas ("Dark Matter" 2015/2024) la
   // búsqueda puede devolver la otra y arrastrar los episodios a su carpeta.
   const metaYearFiable = meta?.year && (!tmdbId || !meta?.id || meta.id === tmdbId) ? meta.year : undefined
   const year = opts.year || metaYearFiable || parsed.year
@@ -468,8 +468,8 @@ export function safeSegment(value: string): string {
 }
 
 // ─── Desambiguación de series homónimas ─────────────────────────────────────
-// "Demo7 S02E03 720p WEBRip x264-MATTER" (serie Dark, 2017) entraba en la
-// búsqueda de "Demo7 S02E03" porque el grupo del release ("-MATTER")
+// "Dark S02E03 720p WEBRip x264-MATTER" (serie Dark, 2017) entraba en la
+// búsqueda de "Dark Matter S02E03" porque el grupo del release ("-MATTER")
 // parece parte del título. Comparar el nombre del release contra el título
 // objetivo es la única señal fiable ANTES de descargar.
 
@@ -487,7 +487,7 @@ function normTokens(value: string): string[] {
     .filter((t) => t.length > 0 && !NAME_STOPWORDS.has(t))
 }
 
-/** Igual que normTokens pero CONSERVANDO los artículos (para distinguir "The Demo" de "Demo"). */
+/** Igual que normTokens pero CONSERVANDO los artículos (para distinguir "The Dark" de "Dark"). */
 function rawTokens(value: string): string[] {
   return String(value || '')
     .normalize('NFD')
@@ -539,14 +539,14 @@ export function releaseSeriesName(name: string): string {
 /**
  * ¿El nombre del release corresponde a alguno de los títulos del objetivo?
  * El título tiene que ser EL título (no una parte): antes bastaba con que
- * apareciera como subcadena y entraban "Standoff.The.Demo.Power.and.Paranoia"
- * (docuserie), "Demo International" y "Demo True" (spin-offs) en una búsqueda de
- * "Demo". Se acepta:
- *   - el mismo título, comparando los tokens pegados (tolera "Demo4" vs
- *     "Demo4" y mayúsculas/acentos/puntuación/artículos),
+ * apareciera como subcadena y entraban "Standoff.The.FBI.Power.and.Paranoia"
+ * (docuserie), "FBI International" y "FBI True" (spin-offs) en una búsqueda de
+ * "FBI". Se acepta:
+ *   - el mismo título, comparando los tokens pegados (tolera "Chicago P.D." vs
+ *     "Chicago PD" y mayúsculas/acentos/puntuación/artículos),
  *   - que el release use solo la parte FINAL del título (franquicia omitida:
- *     "Demo3" para "Demo3"),
- *   - un TÍTULO ALTERNATIVO de TMDB ("Special Ops Demo9" para "Demo9",
+ *     "Strange New Worlds" para "Star Trek: Strange New Worlds"),
+ *   - un TÍTULO ALTERNATIVO de TMDB ("Special Ops Lioness" para "Lioness",
  *     "El tigre y el dragón" para "Tigre y dragón") — llegan en `altTitles`.
  * Devuelve true cuando no se puede juzgar (nombre vacío) — nunca bloquea por
  * falta de datos.
@@ -559,8 +559,8 @@ export function seriesNameMatches(
   const titlePart = releaseSeriesName(releaseName)
   const series = normTokens(titlePart)
   if (series.length === 0) return true
-  // Los artículos se descartan al normalizar, y eso hacía que "The Demo" pasara
-  // como "Demo" (serie homónima): se comparan aparte.
+  // Los artículos se descartan al normalizar, y eso hacía que "The Dark" pasara
+  // como "Dark" (serie homónima, 44 min vs 52): se comparan aparte.
   const rawSeries = rawTokens(titlePart)
   const cands = [...candidates, ...altTitles]
     .filter((c): c is string => Boolean(c && String(c).trim()))
@@ -569,17 +569,16 @@ export function seriesNameMatches(
   if (cands.length === 0) return true
 
   const flat = (tokens: string[]): string => tokens.join('')
-  /** ¿El release usa solo la parte FINAL del título? ("Demo3") */
+  /** ¿El release usa solo la parte FINAL del título? ("Strange New Worlds") */
   const isTailOfTitle = (tokens: string[]): boolean => {
     if (series.length < 2 || series.length >= tokens.length) return false
     const offset = tokens.length - series.length
     return series.every((t, i) => tokens[offset + i] === t)
   }
   /**
-   * El release puede OMITIR el artículo que el título sí lleva ("Demo S01E01"
-   * para "The Demo"), pero no AÑADIR uno que el título no tiene: "The Demo" no
-   * es "Demo". Sin este guardián, normTokens dejaba los dos con los mismos
-   * tokens y se bajaba la serie homónima.
+   * El release puede OMITIR el artículo que el título sí lleva ("Office" para
+   * "The Office"), pero no AÑADIR uno que el título no tiene: "The Dark" no es
+   * "Dark". Sin este guardián, normTokens dejaba los dos con los mismos tokens.
    */
   const articleCompatible = (rawCand: string[]): boolean => {
     const candArticle = rawCand[0] && LEADING_ARTICLES.has(rawCand[0]) ? rawCand[0] : ''
@@ -608,7 +607,7 @@ const ALT_TITLES_TTL_MS = 6 * 60 * 60 * 1000
 /**
  * Títulos alternativos de TMDB (ES/MX/US…) con caché en memoria. Los usa el
  * validador de nombres del grabber y del worker: sin ellos, un release que usa
- * el título alternativo ("Special Ops Demo9" para "Demo9") se rechazaría.
+ * el título alternativo ("Special Ops Lioness" para "Lioness") se rechazaría.
  */
 export async function getAltTitlesCached(tmdbId: number, kind: 'movie' | 'series'): Promise<string[]> {
   if (!tmdbId) return []

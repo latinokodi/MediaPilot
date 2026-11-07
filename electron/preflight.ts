@@ -7,8 +7,8 @@
 //     (.zipx/.rar/.exe/.url, típicos de NTb/FLUX/CAKES en algunos indexers) se
 //     detectan ya en la lista de archivos de la caché de TorBox, sin añadir nada.
 //  2) ¿La duración del video corresponde al episodio/película objetivo? Es la
-//     señal que delata al episodio de OTRA serie homónima (Demo7 2015 de
-//     43 min colándose en el S02E04 de Demo7 2024 de 53 min). La duración
+//     señal que delata al episodio de OTRA serie homónima (Dark Matter 2015 de
+//     43 min colándose en el S02E04 de Dark Matter 2024 de 53 min). La duración
 //     vive en el encabezado del contenedor, así que basta un Range request de
 //     unos MB contra el CDN del debrid + ffprobe: no se baja el archivo entero.
 //

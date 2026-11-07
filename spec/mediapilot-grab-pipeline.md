@@ -36,7 +36,7 @@ Historias de usuario:
   `subtitles.py`), `tmdb-provider.py`.
 - Debrid: TorBox (principal) / Real-Debrid.
 - Frontend: React + Vite (solo consume la API).
-- Bibliotecas: `/media/{movies,tv}` (Jellyfin).
+- Bibliotecas: `/srv/storage/arr-data/media/{movies,tv}` (Jellyfin).
 
 ## 3. Commands
 
@@ -60,7 +60,7 @@ npx vite build
 systemctl --user restart tordownloader.service
 
 # Auditoría de estructura (fuera de la app)
-python3 scripts/audit-tv-layout.py /media/tv
+python3 scripts/audit-tv-layout.py /srv/storage/arr-data/media/tv
 ```
 
 ## 4. Project structure
@@ -81,7 +81,7 @@ puras cuando el comportamiento es una decisión (comparadores, validadores) para
 poder probarlas sin arrancar el servicio. Ejemplo:
 
 ```ts
-/** ¿El release usa solo la parte FINAL del título? ("Demo3") */
+/** ¿El release usa solo la parte FINAL del título? ("Strange New Worlds") */
 const isTailOfTitle = (tokens: string[]): boolean => {
   if (series.length < 2 || series.length >= tokens.length) return false
   const offset = tokens.length - series.length
@@ -133,11 +133,11 @@ Un release pertenece al objetivo si, tras quitar corchetes, año, SxxEyy (o `8x0
 y etiquetas de calidad, sus tokens (sin artículos, sin acentos) **son** el título
 o un **título alternativo** de TMDB, o son la **parte final** del título
 (franquicia omitida). Contener el título no basta.
-- Rechaza: `Standoff.The.Demo.Power.and.Paranoia.…`, `Demo International …`,
-  `Demo True …`, `Demo Most Wanted …`, `Star Trek Discovery …`.
-- Acepta: `Demo S08E01 …`, `Demo4 …` con título `Demo4 …`,
-  `Demo3 …` con título `Demo3`,
-  `Special Ops Demo9 …` con alt title `Special Ops: Demo9`.
+- Rechaza: `Standoff.The.FBI.Power.and.Paranoia.…`, `FBI International …`,
+  `FBI True …`, `FBI Most Wanted …`, `Star Trek Discovery …`.
+- Acepta: `FBI S08E01 …`, `Chicago PD …` con título `Chicago P.D. …`,
+  `Strange New Worlds …` con título `Star Trek: Strange New Worlds`,
+  `Special Ops Lioness …` con alt title `Special Ops: Lioness`.
 - Si el release es latino (se busca por IMDB) la comprobación no rechaza: solo
   penaliza, porque el título viene localizado.
 
@@ -207,8 +207,8 @@ puede bajar.
 - La carpeta destino de lo adoptado se calcula **desde el título emparejado** (tmdb
   id y año del título monitorizado), nunca desde el nombre del torrent: hay
   releases cuyo nombre es un fichero en minúsculas
-  (`demo.s07e20.1080p.web.h264-successfulcrab[EZTVx.to].mkv`) y de ahí salía una
-  carpeta fantasma (`demo s07e20 web successfulcrab mkv/Season 1`) con el episodio
+  (`fbi.s07e20.1080p.web.h264-successfulcrab[EZTVx.to].mkv`) y de ahí salía una
+  carpeta fantasma (`fbi s07e20 web successfulcrab mkv/Season 1`) con el episodio
   dentro. El marcador `sxxeyy` se reconoce sin importar mayúsculas.
 - Se ejecuta al arrancar el servicio, cada 15 min desde el monitor, y a mano con
   `POST /api/debrid/reconcile`. Respeta `max_concurrent_downloads` al bajar (el
@@ -246,7 +246,7 @@ resolver (ni por el grab ni por la carpeta de `media_folders`) no se registra
 nada: mejor no tocar que inventar.
 
 ### B14 · Subtítulos también en packs
-El nombre de un pack sólo trae la temporada (`Demo.S01.COMPLETE…`), así que la
+El nombre de un pack sólo trae la temporada (`FBI.S01.COMPLETE…`), así que la
 petición de subtítulos se quedaba sin `--season/--episode` y los packs terminaban
 con 0 subtítulos. Ahora el episodio se saca del nombre de cada ARCHIVO.
 
@@ -289,7 +289,7 @@ título a mano: el usuario ve que falta un capítulo y quiere intentarlo YA.
 - Regla 3: el forzado no cambia el comportamiento normal del tick de 30 min ni
   de la cola de backfill: sólo el camino manual salta la ventana.
 
-Criterio de éxito: con Demo2 S01E06 esperando hasta `2026-09-21T06:49:28Z`
+Criterio de éxito: con Linternas S01E06 esperando hasta `2026-09-21T06:49:28Z`
 (5 intentos), pulsar "Verificar ahora" a las 03:16 produce `→ intento 6` en el
 log (antes: `grabbed=0 waiting=0 deferred=1`, sin intentar nada).
 
@@ -414,8 +414,8 @@ baja el `.rar` y antes quedaba marcada "completada" sin ningún vídeo reproduci
   (pasado como `wasmBinary`), no un binario del sistema.
 
 Criterio de éxito: un release de escena real (`.rar` con `.mkv` dentro) deja el
-`.mkv` en la carpeta destino y queda "completado"; verificado extrayendo un
-`.rar` de escena real (hevc 1080p DDP5.1, ~900 MB, extraído OK).
+`.mkv` en la carpeta destino y queda "completado"; verificado con
+`Dark Matter S02E06 …-d3g.rar` (hevc 1080p DDP5.1, ~900 MB, extraído OK).
 
 ## 9. Success criteria (verificables)
 

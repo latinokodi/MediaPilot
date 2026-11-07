@@ -36,8 +36,8 @@ export function episodeFromFileName(file: string): EpisodeRef | null {
  *
  * El escáner saca la SERIE de la carpeta pero el NÚMERO de episodio del
  * NOMBRE del archivo. Con el nombre crudo del release a veces crea entradas sin
- * número: pasó con una serie de 2015, 14 episodios quedaron como el nombre de la
- * serie sin T/E hasta renombrarlos a este formato.
+ * número: pasó con Humans (2015), 14 episodios quedaron como "Humans" sin T/E
+ * hasta renombrarlos a este formato.
  */
 export function canonicalEpisodeFileName(seriesLabel: string, ref: EpisodeRef, ext: string): string {
   const label = String(seriesLabel || '').replace(/[<>:"/\\|?*]+/g, '').trim() || 'Serie'
@@ -47,7 +47,7 @@ export function canonicalEpisodeFileName(seriesLabel: string, ref: EpisodeRef, e
   return `${label} - S${season}E${episode}${extension}`
 }
 
-/** Carpeta de temporada → etiqueta de la serie ("Demo (2015)"). */
+/** Carpeta de temporada → etiqueta de la serie ("Humans (2015)"). */
 export function seriesLabelFromPath(file: string): string {
   const dir = path.dirname(file)
   return /\bseason\b|\btemporada\b/i.test(path.basename(dir))

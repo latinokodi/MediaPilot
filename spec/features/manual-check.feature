@@ -1,6 +1,6 @@
 # B18 · La comprobación manual ("Verificar ahora") intenta de verdad.
 #
-# ← el fallo original: Demo2 S01E06 acumuló 5 intentos y quedó esperando
+# ← el fallo original: Linternas S01E06 acumuló 5 intentos y quedó esperando
 #   hasta 2026-09-21T06:49:28Z. Pulsar "Verificar ahora" a las 03:16 devolvía
 #   grabbed=0 waiting=0 deferred=1, sin intentar nada: el capítulo parecía
 #   muerto cuando sólo estaba en la ventana de reintento.
@@ -9,7 +9,7 @@
 Feature: Verificar ahora ignora la ventana de reintento
 
   Scenario: un objetivo en espera se intenta igualmente al forzar
-    # datos reales del caso de Demo2 S01E06 (21/09, 03:16 Bogotá)
+    # datos reales del caso de Linternas S01E06 (21/09, 03:16 Bogotá)
     Given un intento pendiente con próxima fecha "2026-09-21T06:49:28.000Z" y 5 intentos
     And la hora actual es "2026-09-21T03:16:00.000Z"
     When compruebo ese intento sin forzar

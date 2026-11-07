@@ -12,16 +12,16 @@ Feature: Calidad mínima aceptable
 
     Examples:
       | release                                              | resultado      |
-      | Demo S03E01 1080p WEB x264-ETHEL                      | cumple         |
-      | Demo.S01.COMPLETE.1080p.AMZN.WEB-DL.DDP5.1.H.264-FLUX | cumple         |
-      | Demo 2018 Season 7 Complete 1080p WEB x264 [i_c]      | cumple         |
-      | Demo S03E01 2160p WEB-DL DDP5                        | cumple         |
-      | Demo S03E01 4K HDR WEB-DL                            | cumple         |
-      | Demo.S03.COMPLETE.720p.AMZN.WEBRip.x264-GalaxyTV      | no cumple      |
-      | Demo S05E12 720p AMZN WEBRip x264-GalaxyTV            | no cumple      |
-      | Demo S04E01 480p HDTV x264                            | no cumple      |
-      | Demo S03E01 WEB-DL x264                               | cumple         |
-      | Demo S03E01 HDTV x264-SOMEGROUP                       | cumple         |
+      | FBI S03E01 1080p WEB x264-ETHEL                      | cumple         |
+      | FBI.S01.COMPLETE.1080p.AMZN.WEB-DL.DDP5.1.H.264-FLUX | cumple         |
+      | FBI 2018 Season 7 Complete 1080p WEB x264 [i_c]      | cumple         |
+      | FBI S03E01 2160p WEB-DL DDP5                        | cumple         |
+      | FBI S03E01 4K HDR WEB-DL                            | cumple         |
+      | FBI.S03.COMPLETE.720p.AMZN.WEBRip.x264-GalaxyTV      | no cumple      |
+      | FBI S05E12 720p AMZN WEBRip x264-GalaxyTV            | no cumple      |
+      | FBI S04E01 480p HDTV x264                            | no cumple      |
+      | FBI S03E01 WEB-DL x264                               | cumple         |
+      | FBI S03E01 HDTV x264-SOMEGROUP                       | cumple         |
 
   Scenario Outline: Con el mínimo en "cualquiera" no se descarta nada
     Given la calidad mínima es "cualquiera"
@@ -30,5 +30,5 @@ Feature: Calidad mínima aceptable
 
     Examples:
       | release                                        |
-      | Demo.S03.COMPLETE.720p.AMZN.WEBRip.x264-GalaxyTV |
-      | Demo S04E01 480p HDTV x264                       |
+      | FBI.S03.COMPLETE.720p.AMZN.WEBRip.x264-GalaxyTV |
+      | FBI S04E01 480p HDTV x264                       |

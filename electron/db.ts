@@ -23,9 +23,10 @@ let db: DatabaseType
 
 /**
  * Importa la base de una instalación anterior si la de esta versión todavía no
- * existe. Al cambiar el nombre de la app o del archivo de base, la ruta nueva
- * aparece vacía: sin esto, quien ya la tenía instalada arrancaría sin biblioteca,
- * sin watchlist y sin tokens. Nunca sobrescribe: sólo copia si el destino falta.
+ * existe. Al rebautizar la app (TorDownloader PRO → MediaPilot) cambia la carpeta
+ * de datos: sin esto, quien ya la tenía instalada arrancaría con la biblioteca,
+ * la watchlist y los tokens vacíos. Nunca sobrescribe nada: sólo copia cuando el
+ * destino no existe.
  */
 function migrateLegacyDB(target: string): void {
   try {
@@ -254,8 +255,7 @@ export function initDB(): void {
     `)
     console.log('[DB] grab_history reconstruida: watchlist_id ahora admite NULL (descargas manuales)')
   }
-
-
+  
   // Create a default settings row if not exists
   const count = db.prepare('SELECT COUNT(*) as c FROM settings').get() as { c: number };
   if (count.c === 0) {
@@ -365,8 +365,8 @@ export function getMediaFolder(tmdbId: number, mediaType: string): string {
 }
 
 /**
- * Busca el dueño de una carpeta de biblioteca por su nombre ("Demo (2018)",
- * "Demo7 (2026)"…). Genérico: lo usa el worker al terminar una descarga
+ * Busca el dueño de una carpeta de biblioteca por su nombre ("FBI (2018)",
+ * "Materia oscura (2026)"…). Genérico: lo usa el worker al terminar una descarga
  * para saber de qué título son los episodios y no volver a bajarlos.
  */
 export function findMediaFolderByName(name: string): { tmdb_id: number; media_type: string } | null {
@@ -506,8 +506,6 @@ export function updateSettings(settings: Partial<Settings>): SettingsWriteResult
   }
 
   for (const [key, value] of Object.entries(settings || {})) {
-    // 'id' es la clave de la fila: se salta sin avisar (el frontend manda el
-    // objeto de ajustes completo y reportarlo parecía un error en los registros).
     if (key === 'id') continue
     if (!columnas.has(key)) {
       ignoradas.push(key)

@@ -13,54 +13,54 @@ Feature: Aceptación del nombre del release
     Examples:
       # mismo título, con o sin puntuación, con o sin año
       | release                                                          | titulos                  | alternativos | resultado |
-      | Demo S08E01 1080p HEVC x265-MeGusta                               | Demo                      |              | acepta    |
-      | Demo.S07E21.MULTi.1080p.WEB.x264-AMB3R                            | Demo                      |              | acepta    |
-      | Demo 2018 S08E01 1080p WEB h264-BAE                               | Demo                      |              | acepta    |
-      | Demo 8x05 1080p WEB h264-BAE                                      | Demo                      |              | acepta    |
-      | Demo9.2023.S03E07.1080p.WEB-DL.DDP5.1.x265-NTb                 | Demo9                  |              | acepta    |
-      | Demo8 S01E01 1080p WEB h264-ETHEL                        | Demo8            |              | acepta    |
-      | Demo4 S14E01 1080p WEB h264-CAKES                           | Demo4             |              | acepta    |
-      | Demo3 S04E09 1080p WEB h264-ETHEL         | Demo3 |         | acepta    |
-      | Demo3 S04E09 1080p WEB h264-ETHEL                   | Demo3 |         | acepta    |
-      | Special Ops Demo9 S03E06 1080p PMTP WEB-DL                     | Demo9                  | Special Ops: Demo9 | acepta |
-      | Demo7 S02E04 1080p WEB-DL Dual-Lat                      | Demo7              | Demo7 | acepta  |
-      | Demo3 S04E09 Part One 1080p NF WEB-DL DUAL DDP5 1 Atmos H 264-Kitsune | Demo3                  |              | acepta    |
-      | Demo2 S04E09 1080p WEB h264-ETHEL                                | The Demo2                |              | acepta    |
+      | FBI S08E01 1080p HEVC x265-MeGusta                               | FBI                      |              | acepta    |
+      | FBI.S07E21.MULTi.1080p.WEB.x264-AMB3R                            | FBI                      |              | acepta    |
+      | FBI 2018 S08E01 1080p WEB h264-BAE                               | FBI                      |              | acepta    |
+      | FBI 8x05 1080p WEB h264-BAE                                      | FBI                      |              | acepta    |
+      | Lioness.2023.S03E07.1080p.WEB-DL.DDP5.1.x265-NTb                 | Lioness                  |              | acepta    |
+      | The Gentlemen S01E01 1080p WEB h264-ETHEL                        | The Gentlemen            |              | acepta    |
+      | Chicago PD S14E01 1080p WEB h264-CAKES                           | Chicago P.D.             |              | acepta    |
+      | Star Trek Strange New Worlds S04E09 1080p WEB h264-ETHEL         | Star Trek: Strange New Worlds |         | acepta    |
+      | Strange New Worlds S04E09 1080p WEB h264-ETHEL                   | Star Trek: Strange New Worlds |         | acepta    |
+      | Special Ops Lioness S03E06 1080p PMTP WEB-DL                     | Lioness                  | Special Ops: Lioness | acepta |
+      | Materia oscura S02E04 1080p WEB-DL Dual-Lat                      | Dark Matter              | Materia oscura | acepta  |
+      | Dark S01E01 Secrets 1080p NF WEB-DL DUAL DDP5 1 Atmos H 264-Kitsune | Dark                  |              | acepta    |
+      | Gentlemen S01E01 1080p WEB h264-ETHEL                            | The Gentlemen            |              | acepta    |
       # otra serie que CONTIENE el título (los que se colaron en producción)
-      | The.Demo3.S01E02.1080p.WEB.h264-CODSWALLOP                        | Demo3                     |              | rechaza   |
-      | The Demo3 S01E04 1080p AMZN WEB-DL DDP2 0 H 264-RAWR              | Demo3                     |              | rechaza   |
-      | Standoff.The.Demo.Power.and.Paranoia.S01E01.1080p.WEB.h264-BAE    | Demo                      |              | rechaza   |
-      | Demo International S01E10 PROPER 1080p WEB h264-GOSSIP            | Demo                      |              | rechaza   |
-      | Demo True S01E04 1080p WEB h264-KOGi                              | Demo                      |              | rechaza   |
-      | Demo Most Wanted S01E01 1080p WEB h264-CAKES                      | Demo                      |              | rechaza   |
-      | Star Trek Discovery S01E01 1080p WEB h264-ETHEL                  | Demo3 |         | rechaza   |
-      | Demo4 Med S14E01 1080p WEB h264-CAKES                          | Demo4             |              | rechaza   |
-      | American Demo Stories S01E01 1080p WEB                            | Demo                      |              | rechaza   |
-      # el spin-off homonimo: "Demo" NO es "Demo: Nashville" (el episodio de la
-      # serie original acababa dentro de la carpeta del spin-off)
-      | Demo S10E01 That Sinking Feeling 1080p DSNP WEB-DL DD 5 1 H 264-playWEB | Demo: Nashville |      | rechaza   |
-      | Demo Nashville S02E01 Going Rogue 1080p DSNP WEB-DL DD 5 1 H 264-playWEB | Demo: Nashville |     | acepta    |
-      | Demo S10E01 That Sinking Feeling 1080p DSNP WEB-DL DD 5 1 H 264-playWEB | Demo                  |      | acepta    |
+      | The.Dark.S01E02.1080p.WEB.h264-CODSWALLOP                        | Dark                     |              | rechaza   |
+      | The Dark S01E04 1080p AMZN WEB-DL DDP2 0 H 264-RAWR              | Dark                     |              | rechaza   |
+      | Standoff.The.FBI.Power.and.Paranoia.S01E01.1080p.WEB.h264-BAE    | FBI                      |              | rechaza   |
+      | FBI International S01E10 PROPER 1080p WEB h264-GOSSIP            | FBI                      |              | rechaza   |
+      | FBI True S01E04 1080p WEB h264-KOGi                              | FBI                      |              | rechaza   |
+      | FBI Most Wanted S01E01 1080p WEB h264-CAKES                      | FBI                      |              | rechaza   |
+      | Star Trek Discovery S01E01 1080p WEB h264-ETHEL                  | Star Trek: Strange New Worlds |         | rechaza   |
+      | Chicago Med S14E01 1080p WEB h264-CAKES                          | Chicago P.D.             |              | rechaza   |
+      | American FBI Stories S01E01 1080p WEB                            | FBI                      |              | rechaza   |
+      # el spin-off homónimo: "9-1-1" NO es "9-1-1: Nashville" (se colaba y el
+      # episodio de la serie original acabó dentro de la carpeta de Nashville)
+      | 9-1-1 S10E01 That Sinking Feeling 1080p DSNP WEB-DL DD 5 1 H 264-playWEB | 9-1-1: Nashville |      | rechaza   |
+      | 9-1-1 Nashville S02E01 Going Rogue 1080p DSNP WEB-DL DD 5 1 H 264-playWEB | 9-1-1: Nashville |     | acepta    |
+      | 9-1-1 S10E01 That Sinking Feeling 1080p DSNP WEB-DL DD 5 1 H 264-playWEB | 9-1-1                  |      | acepta    |
 
   Scenario: Un release sin nombre reconocible no se bloquea
-    Given los títulos del objetivo son "Demo"
+    Given los títulos del objetivo son "FBI"
     When evalúo el release "S01E01 1080p WEB"
     Then el release se "acepta"
     And la app no bloquea por falta de datos
 
-  # Los releases de anime llevan el nombre TRADUCIDO aunque la ficha guarde el
+  # Los releases de anime llevan el nombre TRADUCIDO aunque TMDB guarde el
   # original en japonés: hay que buscar por el latino o la serie no se baja nunca.
   Scenario Outline: Con título original en japonés se busca por el nombre traducido
     Given una serie con título "<original>" y títulos alternativos "<alt>"
     When elijo el título para buscar
-    Then el primer título de búsqueda es "Demo Show"
+    Then el primer título de búsqueda es "Overgeared"
 
     Examples:
-      | original          | alt                                  |
-      | デモショー～力～    | Demo Show: The Power of Items,Demo Show |
-      | 데모쇼 ~힘~        | Demo Show,Demo Show ~The Power of Items~ |
+      | original   | alt                                |
+      | テムパル～アイテムの力～ | Overgeared: The Power of Items,Overgeared |
+      | 템빨 ~아이템의 힘~  | Overgeared,Overgeared ~The Power of Items~ |
 
   Scenario: Con título latino se busca por ese mismo
-    Given una serie con título "Demo7" y títulos alternativos "<nada>"
+    Given una serie con título "FBI" y títulos alternativos "<nada>"
     When elijo el título para buscar
-    Then el primer título de búsqueda es "Demo7"
+    Then el primer título de búsqueda es "FBI"

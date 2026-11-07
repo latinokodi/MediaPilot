@@ -34,7 +34,7 @@ function getDataDir(): string {
   if (typeof app !== 'undefined' && app && typeof app.getPath === 'function') {
     return app.getPath('userData')
   }
-  return require('os').homedir() + '/.tordownloader-pro'
+  return require('os').homedir() + '/.mediapilot'
 }
 
 function getRunnerPath(): string {

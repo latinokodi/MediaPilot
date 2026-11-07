@@ -1,6 +1,6 @@
 // download-dedupe.ts — "no bajar dos veces el mismo episodio" (spec B26).
 //
-// Lección de producción (Demo S02): se encolaron a la vez el pack de temporada
+// Lección de producción (Silo S02): se encolaron a la vez el pack de temporada
 // y los episodios sueltos del mismo contenido. Cada release es un torrent
 // distinto con su propio id en el debrid, así que la deduplicación por id no lo
 // veía: se bajaron 30 GB de más, dos archivos por episodio y Jellyfin con dos

@@ -1,6 +1,6 @@
 // library-heal.ts — autoconsolidación de la biblioteca.
 //
-// Cuando TMDB cambia el título de un título ("Demo9 (ES)" → "Demo9 (EN)",
+// Cuando TMDB cambia el título de un título ("Operativo Lioness" → "Lioness",
 // "El tigre y el dragón" → "Tigre y dragón") el motor de descargas creaba una
 // carpeta PARALELA: la vieja con casi todo el contenido y la nueva recibiendo lo
 // nuevo. Jellyfin lo mostraba como dos series/películas iguales y el disco se

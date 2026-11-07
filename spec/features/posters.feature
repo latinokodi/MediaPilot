@@ -1,7 +1,7 @@
 # B20 · Pósters en Seguimiento (URLs de TMDB)
 #
-# ← el fallo original: "MovieDemo" salía sin póster (se añadió por API sin
-#   ese campo) y "Demo8"/"Demo8" con una ruta relativa
+# ← el fallo original: "Super Troopers 3" salía sin póster (se añadió por API sin
+#   ese campo) y "The Gentlemen"/"Los caballeros" con una ruta relativa
 #   (/ia3jqovf….jpg) que el navegador pedía a MediaPilot en vez de a TMDB → 404.
 #   Dos huecos en la parrilla, con todo lo demás funcionando.
 
@@ -18,14 +18,14 @@ Feature: Los pósters se guardan como URL absoluta y se rellenan si faltan
       |                                                          |                                                              |
 
   Scenario: un título sin póster lo recibe del detalle de TMDB
-    Given un título en seguimiento "MovieDemo" sin póster
-    And el detalle de TMDB de "MovieDemo" trae el póster "/xyz123.jpg"
+    Given un título en seguimiento "Super Troopers 3" sin póster
+    And el detalle de TMDB de "Super Troopers 3" trae el póster "/xyz123.jpg"
     Then el relleno le pone el póster "https://image.tmdb.org/t/p/w342/xyz123.jpg"
 
   Scenario: un título que ya tiene póster no se pisa
-    # ← caso real: Demo2 ya tiene su URL completa guardada
-    Given un título en seguimiento "Demo2" con póster "https://image.tmdb.org/t/p/w342/20ZcwtRQ4zMczKg3eB.jpg"
-    And el detalle de TMDB de "Demo2" trae el póster "/otroPoster.jpg"
+    # ← caso real: Linternas ya tiene su URL completa guardada
+    Given un título en seguimiento "Linternas" con póster "https://image.tmdb.org/t/p/w342/20ZcwtRQ4zMczKg3eB.jpg"
+    And el detalle de TMDB de "Linternas" trae el póster "/otroPoster.jpg"
     Then el relleno no cambia ningún campo
 
   Scenario: el alta normaliza el póster aunque llegue relativo

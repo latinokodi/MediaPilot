@@ -9,7 +9,7 @@ Feature: Preflight de duración
     Then la duración "<resultado>"
 
     Examples:
-      # Demo7 2015 (43 min) buscado para el S02E04 de 2024 (53 min)
+      # Dark Matter 2015 (43 min) buscado para el S02E04 de 2024 (53 min)
       | esperado | real | tipo    | resultado |
       | 53       | 43   | episodio | rechaza  |
       | 43       | 43   | episodio | acepta   |

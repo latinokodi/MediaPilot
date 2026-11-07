@@ -10,10 +10,10 @@ Feature: Lo que la app hace sola al terminar una descarga
 
     Examples:
       | archivo                                                             | temporada | episodio |
-      | Demo.S01E01.La.legge.di.Godwin.DLMux.1080p.x264.AC3.ITA-ENG.mkv      | 1         | 1        |
-      | demo.s07e20.1080p.web.h264-successfulcrab[EZTVx.to].mkv              | 7         | 20       |
-      | Demo - S07E16 - Covered.mkv                                          | 7         | 16       |
-      | Demo10.1x05.1080p.WEB.mkv                                          | 1         | 5        |
+      | FBI.S01E01.La.legge.di.Godwin.DLMux.1080p.x264.AC3.ITA-ENG.mkv      | 1         | 1        |
+      | fbi.s07e20.1080p.web.h264-successfulcrab[EZTVx.to].mkv              | 7         | 20       |
+      | FBI - S07E16 - Covered.mkv                                          | 7         | 16       |
+      | MobLand.1x05.1080p.WEB.mkv                                          | 1         | 5        |
 
   Scenario: Un archivo sin episodio no se inventa una temporada
     Given el archivo se llama "El.tigre.y.el.dragon.2000.WEB-DL.1080p-Dual-Lat.mkv"
@@ -62,8 +62,8 @@ Feature: Lo que la app hace sola al terminar una descarga
     Then el nombre canónico es "<nombre>"
 
     Examples:
-      | serie        | temporada | episodio | ext  | nombre                     |
-      | Demo (2015)  | 2         | 1        | .mkv | Demo (2015) - S02E01.mkv   |
-      | Serie (2018) | 7         | 20       | .mkv | Serie (2018) - S07E20.mkv  |
-      | Demo         | 1         | 103      | mkv  | Demo - S01E103.mkv         |
-      | Demo/Serie   | 3         | 7        | .mp4 | DemoSerie - S03E07.mp4     |
+      | serie         | temporada | episodio | ext  | nombre                     |
+      | Humans (2015) | 2         | 1        | .mkv | Humans (2015) - S02E01.mkv |
+      | FBI (2018)    | 7         | 20       | .mkv | FBI (2018) - S07E20.mkv    |
+      | Demo          | 1         | 103      | mkv  | Demo - S01E103.mkv         |
+      | Demo/Serie    | 3         | 7        | .mp4 | DemoSerie - S03E07.mp4     |

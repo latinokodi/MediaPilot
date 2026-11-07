@@ -1179,7 +1179,6 @@ export const stepDefs: Array<{ pattern: RegExp; fn: StepFn }> = [
       if (got !== want) throw new Error(`primer título ${got} · esperado ${want}`)
     },
   },
-
   // ── Una sola versión por episodio (B28) ────────────────────────────────
   {
     pattern: /^dos versiones del mismo episodio:$/,
