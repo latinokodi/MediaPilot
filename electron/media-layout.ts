@@ -154,6 +154,21 @@ function normalizeName(value: string): string {
 }
 
 /** Año de 4 dígitos entre paréntesis (o suelto) de un nombre de carpeta. */
+/**
+ * Nombre normalizado SOLO si es informativo. `normalizeName` se queda con
+ * [a-z0-9], así que un título CJK (japonés/coreano/chino) colapsa a "" o al año
+ * suelto: "テムパル～アイテムの力～ (2026)" y "보물섬 (2026)" daban ambos "2026" y
+ * se tomaban por la misma serie, mandando los episodios a la carpeta del anime.
+ * En ese caso se devuelve "" y la comparación normalizada se descarta (quedan
+ * igualdad exacta y comparación por tokens, que sí exigen contenido).
+ */
+function meaningfulName(value: string): string {
+  const n = normalizeName(value)
+  if (!n) return ''
+  if (/^(19|20)\d{2}$/.test(n)) return ''
+  return n
+}
+
 function yearOfFolderName(value: string): number {
   const m = String(value || '').match(/\b(19|20)\d{2}\b/)
   return m ? parseInt(m[0], 10) : 0
@@ -246,7 +261,8 @@ function folderMatchLevel(dirName: string, candidates: string[], year?: number):
     const withYear = year && !yearOfFolderName(cand) ? `${cand} (${year})` : cand
     if (dirName.toLowerCase() === cand.toLowerCase()) { best = Math.max(best, 2); continue }
     if (year && dirName.toLowerCase() === safeSegment(`${cand} (${year})`).toLowerCase()) { best = Math.max(best, 2); continue }
-    if (normalizeName(dirName) === normalizeName(withYear) || normalizeName(dirName) === normalizeName(cand)) { best = Math.max(best, 2); continue }
+    const nDir = meaningfulName(dirName)
+    if (nDir && (nDir === meaningfulName(withYear) || nDir === meaningfulName(cand))) { best = Math.max(best, 2); continue }
     if (!sameShowFolderName(dirName, withYear)) continue
     // Subconjunto ("Demo9" ⊂ "Demo9"): solo vale con años.
     const small = Math.min(new Set(looseTokens(dirName)).size, new Set(looseTokens(withYear)).size)
@@ -269,7 +285,8 @@ function folderExactness(dirName: string, candidates: string[], year?: number): 
     const withYear = year && !yearOfFolderName(cand) ? `${cand} (${year})` : cand
     if (year && dirName.toLowerCase() === safeSegment(`${cand} (${year})`).toLowerCase()) best = Math.max(best, 100)
     if (dirName.toLowerCase() === cand.toLowerCase()) best = Math.max(best, 95)
-    if (normalizeName(dirName) === normalizeName(withYear) || normalizeName(dirName) === normalizeName(cand)) best = Math.max(best, 90)
+    const nDirX = meaningfulName(dirName)
+    if (nDirX && (nDirX === meaningfulName(withYear) || nDirX === meaningfulName(cand))) best = Math.max(best, 90)
     if (sameShowFolderName(dirName, withYear)) best = Math.max(best, 70)
   }
   return best
