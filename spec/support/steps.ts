@@ -14,7 +14,7 @@ import { durationMatches, durationToleranceMin } from '../../electron/preflight'
 import { isDebridCDN } from '../../electron/downloader'
 import { meetsMinQuality, parseQualitySetting, type VideoQuality } from '../../electron/quality'
 import { healLibrary } from '../../electron/library-heal'
-import { orderTargetsForQueue, type QueueTarget } from '../../electron/monitor'
+import { orderTargetsForQueue, pickCurrentSeason, type QueueTarget } from '../../electron/monitor'
 import {
   planReconcile,
   adoptionDestination,
@@ -45,8 +45,9 @@ import {
   updateWatchlistItem,
   listWatchlist,
   removeWatchlistItem,
+  isGrabbed,
 } from '../../electron/watchlist'
-import { getSettings, updateSettings } from '../../electron/db'
+import { getSettings, updateSettings, getDB } from '../../electron/db'
 import { isBenignUpdateError } from '../../electron/updater'
 import { chooseBest, isCamRelease, type GrabTarget, type GrabResultItem } from '../../electron/grabber'
 import { diagnoseNativeError, nativeHelp, type NativeDiagnostico } from '../../electron/native-guard'
@@ -131,6 +132,11 @@ export interface World {
   camVerdict?: boolean
   nativeDiag?: NativeDiagnostico
   nativeAviso?: string
+  seasonList?: Array<{ season_number: number; episode_count: number }>
+  grabDir?: string
+  grabFile?: string
+  grabSeason?: number
+  grabEpisode?: number
 }
 
 export interface StepRun {
@@ -1372,6 +1378,77 @@ export const stepDefs: Array<{ pattern: RegExp; fn: StepFn }> = [
       const cmd = world.nativeDiag?.arreglo || ''
       if (!cmd || !aviso.includes(cmd)) throw new Error(`el aviso no trae el comando "${cmd}"`)
       if (aviso.includes('reading') && aviso.includes('undefined')) throw new Error('el aviso repite el error de JavaScript en vez de explicarlo')
+    },
+  },
+
+  // ── B26 · temporada en curso y grabs fantasma ──────────────────────────
+  {
+    pattern: /^estas temporadas de TMDB$/,
+    fn: ({ world, rows }) => {
+      world.seasonList = rows.map((r) => ({
+        season_number: Number(r[0]),
+        episode_count: Number(r[1]),
+      }))
+    },
+  },
+  {
+    pattern: /^la temporada en curso es (\d+)$/,
+    fn: ({ world }, expected) => {
+      const got = pickCurrentSeason(world.seasonList || [])
+      if (got !== Number(expected)) {
+        throw new Error(`la temporada en curso es ${got} y se esperaba ${expected}`)
+      }
+    },
+  },
+  {
+    pattern: /^un grab registrado de "([^"]*)" S(\d+)E(\d+) con archivo "([^"]*)"$/,
+    fn: ({ world }, title, se, ep, file) => {
+      const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mp-grab-'))
+      const dest = path.join(root, title, `Season ${Number(se)}`)
+      fs.mkdirSync(dest, { recursive: true })
+      const db = getDB()
+      db.prepare('DELETE FROM grab_history WHERE tmdb_id = ?').run(999001)
+      db.prepare(
+        `INSERT INTO grab_history (watchlist_id, tmdb_id, media_type, season, episode, kind, title, status, dest_folder, file_name, grabbed_at)
+         VALUES (?, ?, 'series', ?, ?, 'episode', ?, 'grabbed', ?, ?, datetime('now'))`,
+      ).run(1, 999001, Number(se), Number(ep), title, dest, file)
+      world.grabDir = dest
+      world.grabFile = file
+      world.grabSeason = Number(se)
+      world.grabEpisode = Number(ep)
+    },
+  },
+  {
+    pattern: /^la carpeta de destino contiene "([^"]*)"$/,
+    fn: ({ world }, file) => {
+      if (!world.grabDir) throw new Error('no se registró ningún grab antes')
+      writeIn(path.join(world.grabDir, file))
+    },
+  },
+  {
+    pattern: /^la carpeta de destino no contiene "([^"]*)"$/,
+    fn: ({ world }, file) => {
+      if (!world.grabDir) throw new Error('no se registró ningún grab antes')
+      const target = path.join(world.grabDir, file)
+      if (fs.existsSync(target)) fs.rmSync(target)
+    },
+  },
+  {
+    pattern: /^el episodio "S(\d+)E(\d+)" cuenta como descargado$/,
+    fn: ({ world }, se, ep) => {
+      const got = isGrabbed(999001, 'series', Number(se), Number(ep))
+      const db = getDB()
+      db.prepare('DELETE FROM grab_history WHERE tmdb_id = ?').run(999001)
+      if (!got) throw new Error('el episodio no contó como descargado y debía contar')
+    },
+  },
+  {
+    pattern: /^el episodio "S(\d+)E(\d+)" no cuenta como descargado$/,
+    fn: ({ world }, se, ep) => {
+      const got = isGrabbed(999001, 'series', Number(se), Number(ep))
+      const db = getDB()
+      db.prepare('DELETE FROM grab_history WHERE tmdb_id = ?').run(999001)
+      if (got) throw new Error('el episodio contó como descargado y no debía contar')
     },
   },
 

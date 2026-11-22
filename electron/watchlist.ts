@@ -383,10 +383,12 @@ export function isGrabbed(tmdbId: number, mediaType: string, season: number | nu
      ORDER BY id DESC LIMIT 1`,
   ).get(tmdbId, mediaType, season ?? null, episode ?? null) as GrabHistoryRow | undefined
   if (!row) return false
-  // Un grab cuenta como hecho solo si dejó archivo. Si nunca se materializó
-  // (p. ej. torrente con .zipx que falló al descargar), la biblioteca lo dirá:
-  // sin archivo en la carpeta destino → hay que reintentar.
-  if (row.file_name) return true
+  // Un grab cuenta como hecho solo si el archivo sigue en la biblioteca. Tener
+  // `file_name` NO basta: el monitor apuntaba los grabs como hechos y luego el
+  // archivo desaparecía o nunca se materializaba (un .rar que no se extrajo,
+  // una descarga que se canceló, un borrado a mano) y el episodio no se volvía
+  // a intentar nunca — el hueco quedaba invisible para siempre. Con dest_folder
+  // se comprueba el disco; sin él no hay forma de verificar y se confía.
   if (!row.dest_folder) return true
   return folderHasEpisodeMedia(row.dest_folder, season, episode)
 }

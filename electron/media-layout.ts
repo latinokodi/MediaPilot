@@ -504,35 +504,43 @@ function rawTokens(value: string): string[] {
 const tieneLatino = (s: string): boolean => /[A-Za-z]/.test(String(s || ''))
 
 /**
- * Títulos con los que BUSCAR un release, en orden: primero el título propio y
- * el original, y solo después los alternativos. Con un original CJK (anime
- * japonés, dramas coreanos) el nombre que usan los releases es el traducido
- * ("Overgeared" para テムパル～アイテムの力～), así que los títulos con letras
- * latinas van antes que los que no las tienen.
+ * Títulos con los que BUSCAR un release, en orden.
  *
- * NO ordenar por longitud: así ganaba cualquier alternativo corto y TMDB tiene
- * "Cal Fire" como alternativo de "Fire Country", con lo que el monitor buscaba
- * "Cal Fire S05E05" (0 resultados, 35 reintentos) en vez de "Fire Country
- * S05E05" (71 resultados). Igual con "Chicago Fire" → "שיקגו Fire".
+ * Dos reglas que se combinan:
+ *  1) El título propio y el original van primero, PORQUE SON LOS REALES. No
+ *     ordenar por longitud: así ganaba cualquier alternativo corto y TMDB tiene
+ *     "Cal Fire" como alternativo de "Fire Country", con lo que el monitor
+ *     buscaba "Cal Fire S05E05" (0 resultados, 35 reintentos) en vez de
+ *     "Fire Country S05E05" (71 resultados). Igual "Chicago Fire" → "שיקגו Fire".
+ *  2) Pero si el título es CJK (anime japonés, dramas coreanos), los releases
+ *     usan el nombre traducido: buscar por テムパル～アイテムの力～ devolvía 130
+ *     resultados que el matcher rechazaba y el episodio no se bajaba nunca. Los
+ *     títulos sin letras latinas van al final, como último recurso.
  */
 export function searchTitleCandidates(target: {
   title?: string
   original_title?: string
   alt_titles?: string[]
 }): string[] {
-  const todos = [target.title, target.original_title, ...(target.alt_titles || [])]
+  const all = [target.title, target.original_title, ...(target.alt_titles || [])]
     .map((t) => String(t || '').trim())
     .filter(Boolean)
+  const own = all.slice(0, 2)
+  const alts = all.slice(2)
   const out: string[] = []
   const push = (t: string) => {
     if (!out.includes(t)) out.push(t)
   }
-  // 1) el título real y el original, en el orden declarado.
-  for (const t of todos.slice(0, 2)) push(t)
-  // 2) alternativos con letras latinas (es como los publican los releases).
-  for (const t of todos) if (tieneLatino(t)) push(t)
-  // 3) los que no tienen letras latinas, como último recurso.
-  for (const t of todos) if (!tieneLatino(t)) push(t)
+  // 1) el título real y el original, si están en alfabeto latino.
+  for (const t of own) if (tieneLatino(t)) push(t)
+  // 2) alternativos con letras latinas (es como los publican los releases). Se
+  //    ordenan del más corto al más largo: el corto suele ser el nombre base
+  //    ("Overgeared" antes que "Overgeared: The Power of Items") y una consulta
+  //    corta devuelve igual los releases buenos. Esto NO reintroduce el bug de
+  //    "Cal Fire": el título propio ya entró en el paso 1.
+  for (const t of [...alts].filter(tieneLatino).sort((a, b) => a.length - b.length)) push(t)
+  // 3) el título propio/original CJK, y cualquier otro sin letras latinas.
+  for (const t of all) if (!tieneLatino(t)) push(t)
   return out
 }
 

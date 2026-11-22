@@ -394,6 +394,25 @@ async function checkItem(
  * backfill, ordenados (más nuevos primero). Sin recorte: el llamador decide
  * cuántos intenta.
  */
+/**
+ * Temporada "en curso" de una serie, para decidir qué escanear.
+ *
+ * Es la más alta que TIENE episodios. TMDB anuncia temporadas futuras con
+ * `episode_count: 0` (y a veces sin `air_date`): si se elige solo por número,
+ * el monitor escanea una temporada vacía y la serie se queda "(idle)" para
+ * siempre — así se quedaron sin bajar S01E08-E10 de *Stuart no logra salvar el
+ * Universo*, cuya T2 aparecía con 0 episodios.
+ */
+export function pickCurrentSeason(
+  seasons: Array<{ season_number?: number; episode_count?: number; air_date?: string | null }>,
+): number | null {
+  const aired = seasons.filter((s) => Number(s.season_number) > 0)
+  if (aired.length === 0) return null
+  const withEpisodes = aired.filter((s) => Number(s.episode_count) > 0)
+  const pool = withEpisodes.length > 0 ? withEpisodes : aired
+  return Number([...pool].sort((a, b) => Number(b.season_number) - Number(a.season_number))[0].season_number)
+}
+
 async function collectSeriesTargets(
   item: WatchlistItem,
   detail: any,
@@ -403,10 +422,12 @@ async function collectSeriesTargets(
     .filter((s: any) => Number(s.season_number) > 0)
     .filter((s: any) => !s.air_date || isoDateOf(s.air_date) <= todayIso())
   const fresh: DueTarget[] = []
+  let currentTag = '—'
 
   if (airedSeasons.length > 0) {
-    const byNumDesc = (a: any, b: any) => Number(b.season_number) - Number(a.season_number)
-    const currentNum = Number([...airedSeasons].sort(byNumDesc)[0].season_number)
+    const currentSeason = pickCurrentSeason(airedSeasons)
+    const currentNum = currentSeason ?? Number(airedSeasons[0].season_number)
+    currentTag = currentSeason !== null ? `S${currentSeason}` : '—'
 
     // Which seasons may hold wanted episodes under this scope?
     let seasonNumbers: number[] = [currentNum]
@@ -450,7 +471,7 @@ async function collectSeriesTargets(
   // probarla sin arrancar el servicio (spec/features/queue-order.feature).
   const addedDate = isoDateOf(item.added_at)
   const ordered = orderTargetsForQueue(fresh, addedDate)
-  const seasonTag = airedSeasons.length > 0 ? `S${Number([...airedSeasons].sort((a: any, b: any) => Number(b.season_number) - Number(a.season_number))[0].season_number)}` : '—'
+  const seasonTag = currentTag
   return { targets: ordered, seasonTag, scope }
 }
 
