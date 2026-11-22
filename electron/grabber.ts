@@ -454,35 +454,47 @@ async function searchLatino(
 async function searchEnglish(target: GrabTarget): Promise<GrabResultItem[]> {
   // Primero el título en alfabeto latino: con un original CJK (anime) los
   // releases usan el nombre traducido y buscar por el original no encontraba nada.
-  const base = searchTitleCandidates(target)[0] || (target.original_title || target.title || '').trim()
-  if (!base) return []
-  let query = base
-  if (target.kind === 'movie') {
-    if (target.year) query = `${base} ${target.year}`
-  } else if (target.season && target.episode) {
-    query = `${base} S${pad2(target.season)}E${pad2(target.episode)}`
-  }
-  const startedAt = Date.now()
-  const events = await runPythonLines('meta-search.py', ['--stream', '--jackett-only', query], {}, 70_000)
-  console.debug(`[grab] jackett ▸ "${query}": ${events.length} eventos (${((Date.now() - startedAt) / 1000).toFixed(1)}s)`)
-  const out: GrabResultItem[] = []
-  for (const ev of events) {
-    if (ev && ev.type === 'engine_results' && Array.isArray(ev.results)) {
-      for (const r of ev.results) {
-        out.push({
-          title: r.title || '',
-          size: r.size || '0 B',
-          seeders: Number(r.seeders) || 0,
-          peers: Number(r.peers) || 0,
-          link: r.link || '',
-          indexer: r.indexer || ev.engine || 'Jackett',
-          info_hash: r.info_hash || hashFromLink(r.link),
-          latino: false,
-        })
+  // Si el candidato no devuelve nada que corresponda a la serie, se prueba el
+  // siguiente: un título alternativo equivocado hacía que la búsqueda volviera
+  // vacía todos los días y el episodio no se bajara nunca.
+  const titles = searchTitleCandidates(target)
+  if (titles.length === 0) return []
+  const fallback: GrabResultItem[] = []
+  for (const base of titles.slice(0, 3)) {
+    let query = base
+    if (target.kind === 'movie') {
+      if (target.year) query = `${base} ${target.year}`
+    } else if (target.season && target.episode) {
+      query = `${base} S${pad2(target.season)}E${pad2(target.episode)}`
+    }
+    const startedAt = Date.now()
+    const events = await runPythonLines('meta-search.py', ['--stream', '--jackett-only', query], {}, 70_000)
+    console.debug(`[grab] jackett ▸ "${query}": ${events.length} eventos (${((Date.now() - startedAt) / 1000).toFixed(1)}s)`)
+    const items: GrabResultItem[] = []
+    for (const ev of events) {
+      if (ev && ev.type === 'engine_results' && Array.isArray(ev.results)) {
+        for (const r of ev.results) {
+          items.push({
+            title: r.title || '',
+            size: r.size || '0 B',
+            seeders: Number(r.seeders) || 0,
+            peers: Number(r.peers) || 0,
+            link: r.link || '',
+            indexer: r.indexer || ev.engine || 'Jackett',
+            info_hash: r.info_hash || hashFromLink(r.link),
+            latino: false,
+          })
+        }
       }
     }
+    const candidates = dedupeResults(items)
+    const matches = candidates.filter((it) =>
+      seriesNameMatches(it.title, [target.title, target.original_title], target.alt_titles || []),
+    )
+    if (matches.length > 0) return matches
+    fallback.push(...candidates)
   }
-  return dedupeResults(out)
+  return dedupeResults(fallback)
 }
 
 /**

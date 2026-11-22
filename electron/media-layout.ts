@@ -504,11 +504,16 @@ function rawTokens(value: string): string[] {
 const tieneLatino = (s: string): boolean => /[A-Za-z]/.test(String(s || ''))
 
 /**
- * Títulos con los que BUSCAR un release, en orden: primero los que están en
- * alfabeto latino. Con un original CJK (anime japonés, dramas coreanos) el
- * nombre que usan los releases es el traducido ("Overgeared" para
- * テムパル～アイテムの力～), y buscar por el original devolvía 130 resultados que
- * el matcher rechazaba después: el episodio no se bajaba nunca.
+ * Títulos con los que BUSCAR un release, en orden: primero el título propio y
+ * el original, y solo después los alternativos. Con un original CJK (anime
+ * japonés, dramas coreanos) el nombre que usan los releases es el traducido
+ * ("Overgeared" para テムパル～アイテムの力～), así que los títulos con letras
+ * latinas van antes que los que no las tienen.
+ *
+ * NO ordenar por longitud: así ganaba cualquier alternativo corto y TMDB tiene
+ * "Cal Fire" como alternativo de "Fire Country", con lo que el monitor buscaba
+ * "Cal Fire S05E05" (0 resultados, 35 reintentos) en vez de "Fire Country
+ * S05E05" (71 resultados). Igual con "Chicago Fire" → "שיקגו Fire".
  */
 export function searchTitleCandidates(target: {
   title?: string
@@ -518,12 +523,16 @@ export function searchTitleCandidates(target: {
   const todos = [target.title, target.original_title, ...(target.alt_titles || [])]
     .map((t) => String(t || '').trim())
     .filter(Boolean)
-  // El más corto suele ser el nombre base ("Overgeared" antes que "Overgeared:
-  // The Power of Items") y una consulta corta devuelve igual los releases buenos.
-  const latinos = todos.filter(tieneLatino).sort((a, b) => a.length - b.length)
-  const resto = todos.filter((t) => !tieneLatino(t))
   const out: string[] = []
-  for (const t of [...latinos, ...resto]) if (!out.includes(t)) out.push(t)
+  const push = (t: string) => {
+    if (!out.includes(t)) out.push(t)
+  }
+  // 1) el título real y el original, en el orden declarado.
+  for (const t of todos.slice(0, 2)) push(t)
+  // 2) alternativos con letras latinas (es como los publican los releases).
+  for (const t of todos) if (tieneLatino(t)) push(t)
+  // 3) los que no tienen letras latinas, como último recurso.
+  for (const t of todos) if (!tieneLatino(t)) push(t)
   return out
 }
 
