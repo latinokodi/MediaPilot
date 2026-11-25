@@ -14,6 +14,7 @@ import { BrowserWindow } from 'electron';
 import { eventBus } from './event-bus';
 import { computeDestination, safeSegment, seriesNameMatches, getAltTitlesCached } from './media-layout';
 import { removeLesserVersions } from './version-dedupe';
+import { sizeWithinTolerance, shouldResumeLocalStatus, isStalled } from './download-integrity';
 // El paquete declara `module: ./esm/index.esm.js` (build de navegador), que NO
 // exporta createExtractorFromFile: Rollup fallaba con "is not exported" al
 // empaquetar el main. El fichero Node es esm/index.js, que sí lo exporta.
@@ -24,6 +25,15 @@ const activeLocalDownloads = new Map<string, boolean>();
 const activeDownloaders = new Map<string, Downloader>();
 /** Última vez que se avisó "en espera" por descarga (evita spam cada 10 s). */
 const lastWaitLog = new Map<string, number>();
+
+/**
+ * Sin datos nuevos durante este tiempo, la conexión se da por muerta y se
+ * aborta. El CDN corta el envío sin cerrar el socket y axios no tiene timeout
+ * de inactividad: la descarga se quedaba colgada, la plaza seguía ocupada y el
+ * resto de la cola no arrancaba nunca (pasó con el pack de La ley de Alicia y
+ * con las descargas de WWE). 20 s por encima de 3 mb/s ya es un cuelgue real.
+ */
+const STALL_TIMEOUT_MS = 120_000;
 
 /**
  * Aviso de "en espera por el tope de concurrencia", como mucho una vez por
@@ -173,12 +183,20 @@ export function startWorker(mainWindow: BrowserWindow | null) {
     // un reinicio del servicio): se liberan para que la descarga continúe.
     const freed = releaseStalledPreflights()
     if (freed > 0) console.log(`[Worker] ${freed} descarga(s) liberadas de la validación previa`)
+    // Plazas fantasma: `activeLocalDownloads` vive en memoria, así que al
+    // reiniciar el servicio quedaba vacío y las filas viejas en 'queued'/'failed'
+    // no se volvían a mirar. Se liberan para que el tope de concurrencia se
+    // recalcule con el estado real del disco.
+    activeLocalDownloads.clear()
+    activeDownloaders.clear()
     const allDownloads = getDownloads()
     const completedStates = ['completed', 'cached', 'finished']
     for (const dl of allDownloads) {
       const cloudDone = completedStates.includes((dl.status || '').toLowerCase())
-      const localState = (dl.local_status || '').toLowerCase()
-      const wasInterrupted = localState.startsWith('downloading') || localState === 'pending'
+      // 'queued' también: la fila había cogido plaza y el proceso murió antes de
+      // escribir 'downloading'. Y 'failed' con el debrid completo se reintenta:
+      // muchas veces el fallo fue un cuelgue del CDN, no del release.
+      const wasInterrupted = shouldResumeLocalStatus(dl.local_status)
       if (cloudDone && wasInterrupted) {
         console.log(`[Worker] Resuming interrupted download: ${dl.name}`)
         updateDownload(dl.torbox_id, { local_status: 'pending' })
@@ -289,12 +307,20 @@ async function pollTorBox(settings: any, mainWindow: BrowserWindow | null) {
           console.log(`[Worker] Queued TorBox download: ${name} (${tid})`)
           updateDownload(tid, { local_status: 'queued' });
           activeLocalDownloads.set(tid, true);
-          runTorboxDownload(tid, dlData, settings, settings.torbox_token, mainWindow).catch(err => {
-            console.error(`Local download failed for ${tid}:`, err);
-            updateDownload(tid, { local_status: `failed: ${err.message}` });
-            activeLocalDownloads.delete(tid);
-            eventBus.emit('downloads-updated');
-          });
+          runTorboxDownload(tid, dlData, settings, settings.torbox_token, mainWindow)
+            .catch(err => {
+              console.error(`Local download failed for ${tid}:`, err);
+              updateDownload(tid, { local_status: `failed: ${err.message}` });
+            })
+            .finally(() => {
+              // La plaza se libera SIEMPRE aquí, no dentro de runTorboxDownload:
+              // si esa función lanzaba antes de su propio `finally` (o el
+              // proceso quedaba a medias), la plaza se quedaba ocupada para
+              // siempre y el resto de la cola no arrancaba nunca.
+              activeLocalDownloads.delete(tid);
+              activeDownloaders.delete(tid);
+              eventBus.emit('downloads-updated');
+            });
           }
         }
       }
@@ -499,8 +525,29 @@ async function runTorboxDownload(tid: string, dlData: any, settings: any, token:
       console.log(`[Worker] TB "${dlData.name || tid}": descargando ${idx + 1}/${totalFiles} — ${fileName}${expectedSize > 0 ? ` (${fmtBytes(expectedSize)})` : ''}`)
       eventBus.emit('downloads-updated');
 
+      // ── Vigilante de atasco ──────────────────────────────────────────────
+      // El CDN deja de mandar datos sin cerrar el socket y axios espera para
+      // siempre: la fila se queda "Downloading N/M (x%)" a 0 MB/s y la plaza
+      // de descarga queda ocupada, así que el resto de la cola nunca arranca
+      // (visto con el pack de La ley de Alicia y con las descargas de WWE).
+      // Si los bytes recibidos no cambian durante STALL_TIMEOUT_MS, se aborta
+      // y el error deja la fila lista para reintentarse.
+      const stallWatch = { at: Date.now(), lastBytes: -1 };
+      const stallTimer = setInterval(() => {
+        if (isStalled(stallWatch.at, Date.now(), STALL_TIMEOUT_MS)) {
+          console.warn(`[Worker] descarga atascada sin datos en ${fileName} — se aborta para reintentar`)
+          downloader.abort()
+        }
+      }, 15000);
+
       let lastUpdate = 0;
       const onProg = (p: DownloadProgress) => {
+        // El vigilante cuenta bytes reales, no latidos de progreso: el CDN puede
+        // reemitir el evento sin haber entregado datos nuevos.
+        if (p.bytes_done !== stallWatch.lastBytes) {
+          stallWatch.lastBytes = p.bytes_done
+          stallWatch.at = Date.now()
+        }
         const now = Date.now();
         if (now - lastUpdate > 2000) {
           lastUpdate = now;
@@ -526,6 +573,7 @@ async function runTorboxDownload(tid: string, dlData: any, settings: any, token:
       };
 
       const result = await downloader.start(onProg);
+      clearInterval(stallTimer);
       if (!result.success) {
         throw new Error(`Failed to download ${fileName}: ${result.error}`);
       }
@@ -535,8 +583,16 @@ async function runTorboxDownload(tid: string, dlData: any, settings: any, token:
 
       if (expectedSize > 0) {
         const actualSize = fs.existsSync(filePath) ? fs.statSync(filePath).size : 0;
-        if (actualSize !== expectedSize) {
+        // Tolerancia: el tamaño del torrent y el que sirve el CDN pueden diferir
+        // en unos KB (distinto padding/empaquetado). Antes se exigía igualdad
+        // exacta y una descarga correcta se marcaba "Failed to verify", con lo
+        // que el worker reintentaba el torrent entero una y otra vez y el
+        // episodio nunca entraba (visto con el pack de La ley de Alicia).
+        if (!sizeWithinTolerance(actualSize, expectedSize)) {
           throw new Error(`Failed to verify ${fileName}: expected ${expectedSize} bytes, got ${actualSize}`);
+        }
+        if (actualSize !== expectedSize) {
+          console.debug(`[Worker] ${fileName}: tamaño ${actualSize} vs ${expectedSize} esperado (dentro de tolerancia)`)
         }
       }
 

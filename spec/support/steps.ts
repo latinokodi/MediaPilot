@@ -15,6 +15,7 @@ import { isDebridCDN } from '../../electron/downloader'
 import { meetsMinQuality, parseQualitySetting, type VideoQuality } from '../../electron/quality'
 import { healLibrary } from '../../electron/library-heal'
 import { orderTargetsForQueue, pickCurrentSeason, type QueueTarget } from '../../electron/monitor'
+import { sizeWithinTolerance, shouldResumeLocalStatus, isStalled } from '../../electron/download-integrity'
 import {
   planReconcile,
   adoptionDestination,
@@ -137,6 +138,10 @@ export interface World {
   grabFile?: string
   grabSeason?: number
   grabEpisode?: number
+  sizeActual?: number
+  sizeExpected?: number
+  stallLast?: number
+  stallNow?: number
 }
 
 export interface StepRun {
@@ -1449,6 +1454,68 @@ export const stepDefs: Array<{ pattern: RegExp; fn: StepFn }> = [
       const db = getDB()
       db.prepare('DELETE FROM grab_history WHERE tmdb_id = ?').run(999001)
       if (got) throw new Error('el episodio contó como descargado y no debía contar')
+    },
+  },
+
+  // ── B26 · integridad de descargas locales ───────────────────────────────
+  {
+    pattern: /^un archivo descargado de (\d+) bytes$/,
+    fn: ({ world }, n) => {
+      world.sizeActual = Number(n)
+    },
+  },
+  {
+    pattern: /^el tamaño esperado es (\d+) bytes$/,
+    fn: ({ world }, n) => {
+      world.sizeExpected = Number(n)
+    },
+  },
+  {
+    pattern: /^el tamaño se acepta$/,
+    fn: ({ world }) => {
+      if (!sizeWithinTolerance(world.sizeActual ?? 0, world.sizeExpected ?? 0)) {
+        throw new Error(`${world.sizeActual} bytes frente a ${world.sizeExpected} esperados: debía aceptarse`)
+      }
+    },
+  },
+  {
+    pattern: /^el tamaño se rechaza$/,
+    fn: ({ world }) => {
+      if (sizeWithinTolerance(world.sizeActual ?? 0, world.sizeExpected ?? 0)) {
+        throw new Error(`${world.sizeActual} bytes frente a ${world.sizeExpected} esperados: debía rechazarse`)
+      }
+    },
+  },
+  {
+    pattern: /^el estado local "([^"]*)" se reanuda$/,
+    fn: ({ world }, status) => {
+      if (!shouldResumeLocalStatus(status)) throw new Error(`el estado "${status}" debía reanudarse`)
+    },
+  },
+  {
+    pattern: /^el estado local "([^"]*)" no se reanuda$/,
+    fn: ({ world }, status) => {
+      if (shouldResumeLocalStatus(status)) throw new Error(`el estado "${status}" no debía reanudarse`)
+    },
+  },
+  {
+    pattern: /^la última actividad fue hace (\d+) segundos$/,
+    fn: ({ world }, n) => {
+      const now = 1_800_000_000_000
+      world.stallLast = now - Number(n) * 1000
+      world.stallNow = now
+    },
+  },
+  {
+    pattern: /^la descarga está atascada$/,
+    fn: ({ world }) => {
+      if (!isStalled(world.stallLast ?? 0, world.stallNow ?? 0)) throw new Error('la descarga debía darse por atascada')
+    },
+  },
+  {
+    pattern: /^la descarga no está atascada$/,
+    fn: ({ world }) => {
+      if (isStalled(world.stallLast ?? 0, world.stallNow ?? 0)) throw new Error('la descarga no debía darse por atascada')
     },
   },
 
